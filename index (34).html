@@ -1,0 +1,3119 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>طيارين الأبطال — إدارة المناديب</title>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, get, push, remove, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC8XpYPGL1epcuL6D5epeizYUEi4Nl86PI",
+    authDomain: "almalkiabdo.firebaseapp.com",
+    databaseURL: "https://almalkiabdo-default-rtdb.firebaseio.com",
+    projectId: "almalkiabdo",
+    storageBucket: "almalkiabdo.firebasestorage.app",
+    messagingSenderId: "222544090043",
+    appId: "1:222544090043:web:d2af8d440a6768b1d22a9e",
+    measurementId: "G-FRK2SXJLQ1"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  window.db = db;
+  window.dbRef = ref;
+  window.dbSet = set;
+  window.dbGet = get;
+  window.dbPush = push;
+  window.dbRemove = remove;
+  window.dbUpdate = update;
+  window.dbOnValue = onValue;
+
+  window.firebaseReady = true;
+  document.dispatchEvent(new Event('firebaseReady'));
+</script>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #fff8f3; color: #222; direction: rtl; }
+
+/* LOGIN */
+#loginScreen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; background: linear-gradient(135deg, #FF6B00 0%, #ff8c00 60%, #ffb347 100%);
+}
+.login-box {
+  background: white; border-radius: 16px; padding: 40px; width: 340px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4); text-align: center;
+}
+.login-box img { width: 80px; margin-bottom: 16px; border-radius: 12px; }
+.login-box h2 { color: #222; margin-bottom: 8px; font-size: 20px; }
+.login-box p { color: #666; margin-bottom: 24px; font-size: 14px; }
+.login-box input {
+  width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0;
+  border-radius: 8px; font-size: 15px; margin-bottom: 12px;
+  font-family: inherit; text-align: right; direction: rtl;
+  transition: border-color 0.2s;
+}
+.login-box input:focus { outline: none; border-color: #FF6B00; }
+.login-box button {
+  width: 100%; padding: 13px; background: #FF6B00; color: white;
+  border: none; border-radius: 8px; font-size: 16px; font-weight: bold;
+  cursor: pointer; font-family: inherit; transition: background 0.2s;
+}
+.login-box button:hover { background: #e05a00; }
+#loginError { color: #FF6B00; font-size: 13px; margin-top: 10px; display: none; }
+
+/* MAIN APP */
+#app { display: none; }
+
+/* HEADER */
+.header {
+  background: white; color: #222; padding: 12px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-bottom: 3px solid #FF6B00;
+}
+.header-right { display: flex; align-items: center; gap: 12px; }
+.header img { width: 40px; height: 40px; border-radius: 8px; }
+.header h1 { font-size: 16px; line-height: 1.3; }
+.header h1 span { font-size: 12px; opacity: 0.7; display: block; }
+.header-left { display: flex; gap: 8px; }
+.btn-sm {
+  padding: 7px 14px; border-radius: 8px; border: none; cursor: pointer;
+  font-size: 13px; font-family: inherit; font-weight: bold; transition: all 0.2s;
+}
+.btn-logout { background: #f0f0f0; color: #333; }
+.btn-logout:hover { background: #e0e0e0; }
+.btn-excel { background: #2d6a4f; color: white; }
+.btn-excel:hover { background: #1b4332; }
+
+/* TABS */
+.tabs {
+  display: flex; overflow-x: auto; background: white;
+  border-bottom: 2px solid #e0e0e0; padding: 0 16px;
+  scrollbar-width: none; gap: 4px;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  padding: 12px 16px; cursor: pointer; white-space: nowrap;
+  border-bottom: 3px solid transparent; font-size: 13px; font-weight: bold;
+  color: #666; transition: all 0.2s; border-radius: 6px 6px 0 0;
+}
+.tab:hover { color: #FF6B00; background: #fff5ee; }
+.tab.active { color: #FF6B00; border-bottom-color: #FF6B00; background: #fff5ee; }
+
+/* CONTENT */
+.content { padding: 20px; max-width: 900px; margin: 0 auto; }
+.section { display: none; }
+.section.active { display: block; }
+
+/* CARDS */
+.card {
+  background: white; border-radius: 12px; padding: 20px;
+  margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.card h3 { font-size: 16px; color: #222; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #f0f2f5; }
+
+/* FORMS */
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 13px; color: #555; margin-bottom: 5px; font-weight: bold; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 10px 14px; border: 2px solid #e0e0e0;
+  border-radius: 8px; font-size: 14px; font-family: inherit;
+  transition: border-color 0.2s; direction: rtl;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline: none; border-color: #FF6B00;
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* BUTTONS */
+.btn {
+  padding: 11px 20px; border: none; border-radius: 8px; cursor: pointer;
+  font-size: 14px; font-weight: bold; font-family: inherit; transition: all 0.2s;
+}
+.btn-primary { background: #FF6B00; color: white; }
+.btn-primary:hover { background: #e05a00; }
+.btn-success { background: #2d6a4f; color: white; }
+.btn-success:hover { background: #1b4332; }
+.btn-danger { background: #FF6B00; color: white; }
+.btn-danger:hover { background: #e05a00; }
+.btn-warning { background: #f4a261; color: white; }
+.btn-warning:hover { background: #e76f51; }
+.btn-block { width: 100%; }
+
+/* MANDOUB CARDS */
+.mandoub-card {
+  background: white; border-radius: 10px; padding: 16px;
+  margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  border-right: 4px solid #FF6B00; cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.mandoub-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.mandoub-card.selected { border-color: #2d6a4f; background: #f0fff4; }
+.mandoub-header { display: flex; align-items: center; gap: 12px; }
+.mandoub-avatar {
+  width: 48px; height: 48px; border-radius: 50%; background: #FF6B00;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 18px; font-weight: bold; flex-shrink: 0; overflow: hidden;
+}
+.mandoub-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.mandoub-info { flex: 1; }
+.mandoub-name { font-weight: bold; font-size: 15px; color: #222; }
+.mandoub-details { font-size: 12px; color: #666; margin-top: 3px; }
+.mandoub-debt {
+  text-align: left; font-weight: bold;
+  color: #FF6B00; font-size: 16px;
+}
+.mandoub-debt.paid { color: #2d6a4f; }
+
+/* STATS */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stat-card {
+  background: white; border-radius: 10px; padding: 16px; text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.stat-num { font-size: 24px; font-weight: bold; color: #FF6B00; }
+.stat-label { font-size: 12px; color: #666; margin-top: 4px; }
+
+/* FILTERS */
+.filter-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 7px 14px; border-radius: 20px; border: 2px solid #e0e0e0;
+  background: white; cursor: pointer; font-size: 13px; font-family: inherit;
+  transition: all 0.2s; font-weight: bold;
+}
+.filter-btn.active { background: #FF6B00; color: white; border-color: #FF6B00; }
+
+/* PAYMENT RECORD */
+.payment-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px;
+  border-right: 3px solid #2d6a4f;
+}
+.payment-item .amount { color: #2d6a4f; font-weight: bold; font-size: 15px; }
+.payment-item .info { font-size: 12px; color: #666; }
+
+/* TREASURY */
+.treasury-balance {
+  text-align: center; padding: 24px;
+  background: linear-gradient(135deg, #FF6B00, #ffb347);
+  border-radius: 12px; color: white; margin-bottom: 16px;
+}
+.treasury-balance .amount { font-size: 36px; font-weight: bold; color: #f4d03f; }
+.treasury-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px;
+}
+
+/* MODAL */
+.modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: white; border-radius: 16px; padding: 28px; width: 90%; max-width: 420px;
+  max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.modal h3 { font-size: 18px; color: #222; margin-bottom: 20px; }
+.modal-btns { display: flex; gap: 10px; margin-top: 16px; }
+.modal-btns .btn { flex: 1; }
+
+/* FIRED */
+.fired-card {
+  background: white; border-radius: 10px; padding: 16px;
+  margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  border-right: 4px solid #6c757d; opacity: 0.8;
+}
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #FF6B00; color: white; padding: 12px 24px; border-radius: 30px;
+  font-size: 14px; font-weight: bold; z-index: 999;
+  opacity: 0; transition: opacity 0.3s; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+/* LOADING */
+.loading { text-align: center; padding: 40px; color: #999; font-size: 14px; }
+
+/* ASSIGNMENTS */
+.assign-card {
+  background: white; border-radius: 10px; padding: 14px;
+  margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  border-right: 4px solid #4361ee;
+}
+.assign-phone { color: #4361ee; font-weight: bold; cursor: pointer; }
+.assign-phone:hover { text-decoration: underline; }
+
+/* INVENTORY */
+.inv-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px;
+}
+.inv-count { font-size: 22px; font-weight: bold; color: #222; }
+
+/* IMAGE UPLOAD */
+.img-upload {
+  width: 80px; height: 80px; border-radius: 50%;
+  border: 3px dashed #e0e0e0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; background: #f8f9fa; margin: 10px auto;
+  transition: border-color 0.2s;
+}
+.img-upload:hover { border-color: #FF6B00; }
+.img-upload img { width: 100%; height: 100%; object-fit: cover; }
+.img-upload span { font-size: 11px; color: #999; text-align: center; padding: 8px; }
+
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 12px;
+  font-size: 11px; font-weight: bold;
+}
+.badge-green { background: #d4edda; color: #155724; }
+.badge-red { background: #f8d7da; color: #721c24; }
+.badge-gray { background: #e2e3e5; color: #383d41; }
+
+.empty-state { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+
+@media (max-width: 480px) {
+  .form-row { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .content { padding: 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <!-- Big talabat logo on orange bg -->
+  <div class="login-logo-section">
+    <span class="talabat-big-logo">talabat</span>
+    <div class="talabat-tagline">إدارة مناديب طيارين الأبطال</div>
+  </div>
+  <!-- White card -->
+  <div class="login-box">
+    <div class="login-divider"></div>
+    <div class="login-subtitle">تسجيل الدخول</div>
+    <div class="login-subtitle2">مصطفى الملكي</div>
+    <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username" />
+    <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password" />
+    <button onclick="doLogin()">دخول</button>
+    <div id="loginError">❌ اسم المستخدم أو كلمة المرور غلط!</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="header">
+    <div class="header-right">
+      <svg viewBox="0 0 160 55" xmlns="http://www.w3.org/2000/svg" style="height:40px;width:auto;">
+        <rect x="0" y="2" width="50" height="50" rx="10" fill="#FF6B00"/>
+        <text x="25" y="40" font-size="38" text-anchor="middle" fill="white" font-family="Arial Black,sans-serif" font-weight="900">t</text>
+        <text x="62" y="38" font-size="26" fill="#FF6B00" font-family="Arial Black,sans-serif" font-weight="900">talabat</text>
+      </svg>
+      <div style="border-right:2px solid #eee;padding-right:12px;margin-right:4px;">
+        <div style="font-weight:bold;font-size:13px;color:#333;">طيارين الأبطال</div>
+        <div style="font-size:11px;color:#999;">مصطفى الملكي</div>
+      </div>
+    </div>
+    <div class="header-left">
+      <button class="btn-sm btn-excel" onclick="exportExcel()">📊 إكسيل</button>
+      <button class="btn-sm btn-logout" onclick="doLogout()">👤 خروج</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('register')">📝 تسجيل</div>
+    <div class="tab" onclick="showTab('mandoubs')">👥 المناديب</div>
+    <div class="tab" onclick="showTab('payments')">💳 سجل الدفع</div>
+    <div class="tab" onclick="showTab('treasury')">🏦 الخزينة</div>
+    <div class="tab" onclick="showTab('custody')">📦 العُهد</div>
+    <div class="tab" onclick="showTab('fired')">🚫 الإقالات</div>
+    <div class="tab" onclick="showTab('totals')">📊 الإجماليات</div>
+    <div class="tab" onclick="showTab('inventory')">🗃 المخزن</div>
+    <div class="tab" onclick="showTab('assignments')">📋 التعيينات</div>
+    <div class="tab" onclick="showTab('debtsummary')">💰 ملخص المديونيات</div>
+    <div class="tab" onclick="showTab('collections')">💵 القبض والمديونيات</div>
+    <div class="tab" onclick="showTab('officepower')">💪 قوة المكتب</div>
+    <div class="tab" onclick="showTab('agentstrength')">🏆 قوة المناديب</div>
+    <div class="tab" onclick="showTab('reservations')">📅 الحجوزات</div>
+    <div class="tab" id="adminTabBtn" onclick="showTab('admin')" style="display:none;color:#FF6B00;font-weight:900;">⚙️ الأدمن</div>
+  </div>
+
+  <div class="content">
+
+    <!-- REGISTER -->
+    <div id="sec-register" class="section active">
+      <div class="card">
+        <h3>📝 بيانات المندوب</h3>
+        <div style="text-align:center;">
+          <div class="img-upload" onclick="document.getElementById('imgInput').click()">
+            <img id="previewImg" src="" style="display:none;" />
+            <span id="imgPlaceholder">اضغط لإضافة صورة</span>
+          </div>
+          <input type="file" id="imgInput" accept="image/*" style="display:none;" onchange="previewImage(this)" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>اسم المندوب</label>
+            <input type="text" id="regName" placeholder="الاسم الكامل" />
+          </div>
+          <div class="form-group">
+            <label>ID المندوب (اختياري)</label>
+            <input type="text" id="regId" placeholder="رقم تعريفي" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>رقم الموبايل (اختياري)</label>
+          <input type="text" id="regPhone" placeholder="01xxxxxxxxx" />
+        </div>
+      </div>
+      <div class="card">
+        <h3>💼 تفاصيل الاشتراك</h3>
+        <div class="form-group">
+          <label>الباوتش</label>
+          <select id="regBag">
+            <option value="0">بدون</option>
+            <option value="450">عجلة — 450 ج</option>
+            <option value="550">مكنة — 550 ج</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>التيشرتين</label>
+          <select id="regTshirt">
+            <option value="0">بدون</option>
+            <option value="300">تيشرتين — 300 ج</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>الاستعلام الأمني</label>
+          <select id="regSecurity">
+            <option value="0">بدون</option>
+            <option value="100">استعلام — 100 ج</option>
+          </select>
+        </div>
+        <div style="background:#fff5f5;padding:14px;border-radius:8px;margin-bottom:16px;text-align:center;">
+          <div style="font-size:13px;color:#666;">الإجمالي المديون</div>
+          <div id="regTotal" style="font-size:24px;font-weight:bold;color:#FF6B00;">0 ج</div>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="registerMandoub()">✅ تسجيل المندوب</button>
+      </div>
+    </div>
+
+    <!-- MANDOUBS -->
+    <div id="sec-mandoubs" class="section">
+      <div class="filter-tabs">
+        <button class="filter-btn active" onclick="filterMandoubs('all',this)">الكل</button>
+        <button class="filter-btn" onclick="filterMandoubs('active',this)">شغّالين</button>
+        <button class="filter-btn" onclick="filterMandoubs('paid',this)">خلّصوا</button>
+        <button class="filter-btn" onclick="filterMandoubs('debt',this)">عليهم مديونية</button>
+      </div>
+      <div id="mandoubsList"></div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div id="sec-payments" class="section">
+      <div class="form-group">
+        <label>اختر المندوب</label>
+        <select id="paymentMandoubSelect" onchange="showPaymentHistory()">
+          <option value="">— اختر مندوب —</option>
+        </select>
+      </div>
+      <div id="paymentHistoryContainer"><div class="empty-state">اختر مندوب أولاً</div></div>
+    </div>
+
+    <!-- TREASURY -->
+    <div id="sec-treasury" class="section">
+      <div class="treasury-balance">
+        <div style="font-size:14px;margin-bottom:8px;">💰 رصيد الخزينة</div>
+        <div id="treasuryBalance" class="amount">0 ج</div>
+        <div style="display:flex;justify-content:space-around;margin-top:16px;font-size:13px;">
+          <div><div id="totalAdded" style="font-weight:bold;">0 ج</div><div style="opacity:0.7;">إجمالي ما أُضيف</div></div>
+          <div><div id="totalPaid" style="font-weight:bold;">0 ج</div><div style="opacity:0.7;">إجمالي الدفعات</div></div>
+        </div>
+      </div>
+      <div id="treasuryWarning" style="display:none;background:#fff3cd;padding:12px;border-radius:8px;margin-bottom:12px;color:#856404;font-size:13px;font-weight:bold;">
+        ⚠️ تحذير: رصيد الخزينة منخفض أو سلبي!
+      </div>
+      <div class="card">
+        <h3>➕ إضافة مبلغ للخزينة</h3>
+        <div style="display:flex;gap:10px;">
+          <input type="number" id="addAmount" placeholder="المبلغ بالجنيه" style="flex:1;padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;" />
+          <button class="btn btn-success" onclick="addToTreasury()">إضافة</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>📜 سجل الخزينة</h3>
+        <div id="treasuryLog"></div>
+        <button class="btn btn-danger btn-block" style="margin-top:12px;" onclick="clearTreasuryLog()">🗑 مسح السجل</button>
+      </div>
+    </div>
+
+    <!-- CUSTODY -->
+    <div id="sec-custody" class="section">
+      <div class="stats-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="stat-card">
+          <div id="custodyJackets" class="stat-num">0</div>
+          <div class="stat-label">جاكيتات</div>
+        </div>
+        <div class="stat-card">
+          <div id="custodyBags" class="stat-num">0</div>
+          <div class="stat-label">باوتشات</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>📦 تسجيل عهدة جديدة</h3>
+        <div class="form-group">
+          <label>اسم المندوب</label>
+          <input type="text" id="custodyName" placeholder="اسم المندوب" />
+        </div>
+        <div class="form-group">
+          <label>ID المندوب (اختياري)</label>
+          <input type="text" id="custodyId" placeholder="رقم تعريفي" />
+        </div>
+        <div class="form-group">
+          <label>نوع العهدة</label>
+          <select id="custodyType">
+            <option value="jacket">🧥 جاكيت</option>
+            <option value="bag">🎒 باوتش</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>الكمية</label>
+          <select id="custodyQty">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="addCustody()">📦 تسجيل العهدة</button>
+      </div>
+      <div class="card">
+        <h3>📋 العُهد على المناديب</h3>
+        <div id="custodyList"></div>
+      </div>
+    </div>
+
+    <!-- FIRED UNIFIED -->
+    <div id="sec-fired" class="section">
+
+      <!-- هيدر احترافي -->
+      <div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%);border-radius:16px;padding:20px 24px;margin-bottom:20px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-20px;left:-20px;width:120px;height:120px;background:rgba(255,107,0,0.15);border-radius:50%;"></div>
+        <div style="position:absolute;bottom:-30px;right:-10px;width:160px;height:160px;background:rgba(230,57,70,0.1);border-radius:50%;"></div>
+        <div style="display:flex;align-items:center;gap:14px;position:relative;">
+          <!-- لوجو talabat -->
+          <div style="background:#FF6B00;border-radius:12px;padding:10px 14px;flex-shrink:0;">
+            <svg viewBox="0 0 80 28" xmlns="http://www.w3.org/2000/svg" style="height:22px;width:auto;">
+              <text x="0" y="22" font-size="26" fill="white" font-family="Arial Black,sans-serif" font-weight="900">t</text>
+              <text x="18" y="22" font-size="18" fill="white" font-family="Arial Black,sans-serif" font-weight="900">alaba</text>
+              <text x="68" y="22" font-size="26" fill="white" font-family="Arial Black,sans-serif" font-weight="900">t</text>
+            </svg>
+          </div>
+          <div>
+            <div style="color:white;font-size:18px;font-weight:900;">سجل الإقالات</div>
+            <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:2px;">إقالات الشركة · إقالات بورسعيد</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- إحصائيات موحّدة -->
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:12px;">
+        <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:12px;padding:16px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,0.15);">
+          <div id="uf_company_count" style="font-size:28px;font-weight:900;color:#FF6B00;">0</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px;">إقالات الشركة</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#0f3460,#16213e);border-radius:12px;padding:16px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,0.15);">
+          <div id="uf_port_count" style="font-size:28px;font-weight:900;color:#e63946;">0</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px;">إقالات بورسعيد</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+        <div style="background:white;border-radius:10px;padding:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-top:3px solid #FF6B00;">
+          <div id="uf_company_debt" style="font-size:18px;font-weight:bold;color:#FF6B00;">0 ج</div>
+          <div style="font-size:11px;color:#999;margin-top:3px;">ديون الشركة</div>
+        </div>
+        <div style="background:white;border-radius:10px;padding:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-top:3px solid #e63946;">
+          <div id="uf_port_debt" style="font-size:18px;font-weight:bold;color:#e63946;">0 ج</div>
+          <div style="font-size:11px;color:#999;margin-top:3px;">ديون بورسعيد</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#FF6B00,#e05a00);border-radius:10px;padding:14px;text-align:center;box-shadow:0 2px 8px rgba(255,107,0,0.3);">
+          <div id="uf_total_debt" style="font-size:18px;font-weight:bold;color:white;">0 ج</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:3px;">إجمالي الديون</div>
+        </div>
+      </div>
+
+      <!-- سب-تابس -->
+      <div style="display:flex;background:#f8f9fa;border-radius:12px;padding:4px;gap:4px;margin-bottom:20px;">
+        <button id="uf_tab_company" onclick="switchFiredTab('company')"
+          style="flex:1;padding:12px;border:none;border-radius:9px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:bold;background:white;color:#FF6B00;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:all 0.2s;">
+          🚫 إقالات الشركة
+        </button>
+        <button id="uf_tab_port" onclick="switchFiredTab('port')"
+          style="flex:1;padding:12px;border:none;border-radius:9px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:bold;background:transparent;color:#666;transition:all 0.2s;">
+          📍 إقالات بورسعيد
+        </button>
+      </div>
+
+      <!-- محتوى إقالات الشركة -->
+      <div id="uf_panel_company">
+        <div class="card">
+          <div id="firedList"></div>
+        </div>
+      </div>
+
+      <!-- محتوى إقالات بورسعيد -->
+      <div id="uf_panel_port" style="display:none;">
+
+        <!-- إحصائيات بورسعيد -->
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+          <button class="filter-btn active" id="pf_f_all"   onclick="pfSetFilter('all',this)">الكل</button>
+          <button class="filter-btn"        id="pf_f_debt"  onclick="pfSetFilter('debt',this)">💸 عليهم مديونية</button>
+          <button class="filter-btn"        id="pf_f_clear" onclick="pfSetFilter('clear',this)">✅ بدون مديونية</button>
+        </div>
+
+        <div class="card">
+          <h3>➕ تسجيل إقالة جديدة — بورسعيد</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>الاسم</label>
+              <input type="text" id="pf_name" placeholder="اسم المندوب" />
+            </div>
+            <div class="form-group">
+              <label>ID المندوب</label>
+              <input type="text" id="pf_id" placeholder="رقم تعريفي" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>المديونية (لو في)</label>
+              <input type="number" id="pf_debt" placeholder="0" />
+            </div>
+            <div class="form-group">
+              <label>تاريخ الإقالة</label>
+              <input type="date" id="pf_date" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>سبب الإقالة</label>
+            <select id="pf_reason">
+              <option value="إهمال">إهمال</option>
+              <option value="غياب">غياب</option>
+              <option value="سرقة">سرقة</option>
+              <option value="مخالفة">مخالفة</option>
+              <option value="استقالة">استقالة</option>
+              <option value="انتهاء العقد">انتهاء العقد</option>
+              <option value="أخرى">أخرى</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ملاحظات</label>
+            <textarea id="pf_notes" rows="2" placeholder="أي تفاصيل إضافية..."></textarea>
+          </div>
+          <button class="btn btn-danger btn-block" onclick="addPortFired()">🚫 تسجيل الإقالة</button>
+        </div>
+
+        <div class="card">
+          <h3>📋 سجل إقالات بورسعيد</h3>
+          <input type="text" id="pf_search" placeholder="🔍 بحث باسم أو ID أو سبب..." onkeyup="renderPortFired()" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;margin-bottom:12px;font-family:inherit;font-size:14px;" />
+          <div id="pf_list"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TOTALS -->
+    <div id="sec-totals" class="section">
+      <div id="totalsList"></div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div id="sec-inventory" class="section">
+      <div class="card">
+        <h3>📦 المخزون الحالي</h3>
+        <div id="inventoryDisplay"></div>
+      </div>
+      <div class="card">
+        <h3>➕ استلام من الشركة</h3>
+        <div class="form-group">
+          <label>الصنف</label>
+          <select id="invItem">
+            <option value="tshirt:150">تيشرت — 150 ج</option>
+            <option value="bag_bike:450">باوتش عجلة — 450 ج</option>
+            <option value="bag_car:550">باوتش مكنة — 550 ج</option>
+            <option value="security:100">استعلام أمني — 100 ج</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>الكمية</label>
+          <input type="number" id="invQty" value="1" min="1" style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;" />
+        </div>
+        <button class="btn btn-success btn-block" onclick="addInventory()">➕ إضافة للمخزن</button>
+      </div>
+      <div class="card">
+        <h3>📜 سجل حركة المخزن</h3>
+        <div id="inventoryLog"></div>
+      </div>
+    </div>
+
+    <!-- DEBT SUMMARY -->
+    <div id="sec-debtsummary" class="section">
+      <!-- إجماليات عامة -->
+      <div class="stats-grid" style="grid-template-columns:1fr 1fr;margin-bottom:4px;">
+        <div class="stat-card" style="background:linear-gradient(135deg,#FF6B00,#ffb347);color:white;">
+          <div id="ds_activeTotal" class="stat-num" style="color:white;">0 ج</div>
+          <div class="stat-label" style="color:rgba(255,255,255,0.85);">مديونية المناديب الشغّالين</div>
+        </div>
+        <div class="stat-card" style="background:linear-gradient(135deg,#6c757d,#adb5bd);color:white;">
+          <div id="ds_firedTotal" class="stat-num" style="color:white;">0 ج</div>
+          <div class="stat-label" style="color:rgba(255,255,255,0.85);">مديونية المقالين</div>
+        </div>
+      </div>
+      <div class="stat-card" style="background:linear-gradient(135deg,#2d6a4f,#52b788);color:white;margin-bottom:16px;text-align:center;">
+        <div id="ds_grandTotal" class="stat-num" style="color:#f4d03f;">0 ج</div>
+        <div class="stat-label" style="color:rgba(255,255,255,0.85);">إجمالي كل المديونيات</div>
+      </div>
+
+      <!-- المناديب الشغّالين -->
+      <div class="card">
+        <h3 style="margin-bottom:12px;">👥 المناديب الشغّالين</h3>
+        <div id="ds_activeList"></div>
+      </div>
+
+      <!-- المقالين -->
+      <div class="card">
+        <h3 style="margin-bottom:12px;">🚫 المقالين</h3>
+        <div id="ds_firedList"></div>
+      </div>
+    </div>
+
+    <!-- OFFICE POWER -->
+    <div id="sec-officepower" class="section">
+      <div class="stats-grid" style="grid-template-columns:1fr 1fr;margin-bottom:4px;">
+        <div class="stat-card">
+          <div id="op_count" class="stat-num">0</div>
+          <div class="stat-label">عدد المناديب</div>
+        </div>
+        <div class="stat-card">
+          <div id="op_types" class="stat-num" style="font-size:14px;">—</div>
+          <div class="stat-label">الأنواع</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>➕ إضافة مندوب لقوة المكتب</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>الاسم</label>
+            <input type="text" id="op_name" placeholder="اسم المندوب" />
+          </div>
+          <div class="form-group">
+            <label>ID</label>
+            <input type="text" id="op_id" placeholder="رقم تعريفي" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>رقم الموبايل</label>
+            <input type="text" id="op_phone" placeholder="01xxxxxxxxx" />
+          </div>
+          <div class="form-group">
+            <label>النوع</label>
+            <select id="op_type" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;">
+              <option value="موتوسيكل">🛵 موتوسيكل</option>
+              <option value="عجلة">🚲 عجلة</option>
+              <option value="مكنة">🚗 مكنة</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>ملاحظات (اختياري)</label>
+          <input type="text" id="op_notes" placeholder="أي ملاحظات..." />
+        </div>
+        <button class="btn btn-primary btn-block" onclick="addOfficePower()">➕ إضافة للقوة</button>
+      </div>
+
+      <div class="card">
+        <h3>👥 المناديب الشغّالين في المكتب</h3>
+        <input type="text" id="op_search" placeholder="🔍 بحث باسم أو ID..." onkeyup="renderOfficePower()" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;margin-bottom:12px;font-family:inherit;font-size:14px;" />
+        <div id="op_list"></div>
+      </div>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="sec-agentstrength" class="section">
+
+      <!-- إحصائيات -->
+      <div class="stats-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:4px;">
+        <div class="stat-card" style="background:linear-gradient(135deg,#FF6B00,#ffb347);color:white;">
+          <div id="as_working" class="stat-num" style="color:white;">0</div>
+          <div class="stat-label" style="color:rgba(255,255,255,0.85);">🛵 إجمالي الطيارين الشغّالين</div>
+        </div>
+        <div class="stat-card" style="background:linear-gradient(135deg,#6c757d,#adb5bd);color:white;">
+          <div id="as_fired_count" class="stat-num" style="color:white;">0</div>
+          <div class="stat-label" style="color:rgba(255,255,255,0.85);">🚫 المقالين</div>
+        </div>
+      </div>
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px;">
+        <div class="stat-card" style="border-top:3px solid #2d6a4f;">
+          <div id="as_strong" class="stat-num" style="color:#2d6a4f;">0</div>
+          <div class="stat-label">💪 أقوياء</div>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #f4a261;">
+          <div id="as_good" class="stat-num" style="color:#f4a261;">0</div>
+          <div class="stat-label">👍 جيدين</div>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #e63946;">
+          <div id="as_weak" class="stat-num" style="color:#e63946;">0</div>
+          <div class="stat-label">👎 ضعاف</div>
+        </div>
+      </div>
+
+      <!-- فورم الإضافة -->
+      <div class="card">
+        <h3>➕ إضافة مندوب</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>اسم المندوب</label>
+            <input type="text" id="as_name" placeholder="اسم المندوب" />
+          </div>
+          <div class="form-group">
+            <label>ID المندوب</label>
+            <input type="text" id="as_id" placeholder="رقم تعريفي" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>تصنيف القوة</label>
+          <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
+            <button id="as_btn_strong" onclick="selectAgentStrength('قوي')" style="flex:1;min-width:80px;padding:11px 8px;border:2px solid #e0e0e0;border-radius:8px;background:white;cursor:pointer;font-family:inherit;font-size:13px;font-weight:bold;transition:all 0.2s;">💪 قوي</button>
+            <button id="as_btn_good"   onclick="selectAgentStrength('جيد')"  style="flex:1;min-width:80px;padding:11px 8px;border:2px solid #e0e0e0;border-radius:8px;background:white;cursor:pointer;font-family:inherit;font-size:13px;font-weight:bold;transition:all 0.2s;">👍 جيد</button>
+            <button id="as_btn_weak"   onclick="selectAgentStrength('ضعيف')" style="flex:1;min-width:80px;padding:11px 8px;border:2px solid #e0e0e0;border-radius:8px;background:white;cursor:pointer;font-family:inherit;font-size:13px;font-weight:bold;transition:all 0.2s;">👎 ضعيف</button>
+          </div>
+          <input type="hidden" id="as_strength_val" value="" />
+        </div>
+        <button class="btn btn-primary btn-block" onclick="addAgentStrength()">➕ إضافة</button>
+      </div>
+
+      <!-- قسم الشغّالين -->
+      <div class="card">
+        <h3>✅ الطيارين الشغّالين <span id="as_working_label" style="font-size:13px;color:#FF6B00;font-weight:normal;"></span></h3>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <button class="filter-btn active" id="as_filter_all"    onclick="filterAgentStrength('الكل',this)">الكل</button>
+          <button class="filter-btn"        id="as_filter_strong" onclick="filterAgentStrength('قوي',this)">💪 أقوياء</button>
+          <button class="filter-btn"        id="as_filter_good"   onclick="filterAgentStrength('جيد',this)">👍 جيدين</button>
+          <button class="filter-btn"        id="as_filter_weak"   onclick="filterAgentStrength('ضعيف',this)">👎 ضعاف</button>
+        </div>
+        <input type="text" id="as_search" placeholder="🔍 بحث باسم أو ID..." onkeyup="renderAgentStrength()" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;margin-bottom:8px;font-family:inherit;font-size:14px;" />
+
+        <!-- جدول الشغّالين -->
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;" id="as_table_working">
+            <thead>
+              <tr style="background:#f8f9fa;text-align:right;">
+                <th style="padding:10px 12px;border-bottom:2px solid #e0e0e0;font-weight:bold;">#</th>
+                <th style="padding:10px 12px;border-bottom:2px solid #e0e0e0;font-weight:bold;">الاسم</th>
+                <th style="padding:10px 12px;border-bottom:2px solid #e0e0e0;font-weight:bold;">ID</th>
+                <th style="padding:10px 12px;border-bottom:2px solid #e0e0e0;font-weight:bold;">التصنيف</th>
+                <th style="padding:10px 12px;border-bottom:2px solid #e0e0e0;font-weight:bold;">التاريخ</th>
+                <th style="padding:10px 12px;border-bottom:2px solid #e0e0e0;font-weight:bold;">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="as_list"></tbody>
+          </table>
+        </div>
+        <div id="as_empty_working" class="empty-state" style="display:none;">مفيش طيارين شغّالين</div>
+      </div>
+
+      <!-- قسم المقالين -->
+      <div class="card">
+        <h3>🚫 المقالين <span id="as_fired_label" style="font-size:13px;color:#e63946;font-weight:normal;"></span></h3>
+        <input type="text" id="as_search_fired" placeholder="🔍 بحث في المقالين..." onkeyup="renderAgentStrength()" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;margin-bottom:8px;font-family:inherit;font-size:14px;" />
+
+        <!-- جدول المقالين -->
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;" id="as_table_fired">
+            <thead>
+              <tr style="background:#f8f9fa;text-align:right;">
+                <th style="padding:10px 12px;border-bottom:2px solid #e0e0e0;font-weight:bold;">#</th>
+                <th style="padding:10px 12px;border-bottom:2px solid #e0e0e0;font-weight:bold;">الاسم</th>
+                <th style="padding:10px 12px;border-bottom:2px solid #e0e0e0;font-weight:bold;">ID</th>
+                <th style="padding:10px 12px;border-bottom:2px solid #e0e0e0;font-weight:bold;">التصنيف</th>
+                <th style="padding:10px 12px;border-bottom:2px solid #e0e0e0;font-weight:bold;">تاريخ الإقالة</th>
+                <th style="padding:10px 12px;border-bottom:2px solid #e0e0e0;font-weight:bold;">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="as_list_fired"></tbody>
+          </table>
+        </div>
+        <div id="as_empty_fired" class="empty-state" style="display:none;">مفيش مقالين مسجّلين</div>
+      </div>
+
+    </div>
+
+    <!-- RESERVATIONS -->
+    <div id="sec-reservations" class="section">
+
+      <!-- هيدر -->
+      <div style="background:linear-gradient(135deg,#0f3460,#16213e);border-radius:16px;padding:18px 22px;margin-bottom:18px;display:flex;align-items:center;gap:14px;">
+        <div style="background:#FF6B00;border-radius:10px;padding:8px 12px;flex-shrink:0;">
+          <svg viewBox="0 0 80 28" xmlns="http://www.w3.org/2000/svg" style="height:20px;width:auto;">
+            <text x="0" y="22" font-size="26" fill="white" font-family="Arial Black,sans-serif" font-weight="900">t</text>
+            <text x="18" y="22" font-size="18" fill="white" font-family="Arial Black,sans-serif" font-weight="900">alaba</text>
+            <text x="68" y="22" font-size="26" fill="white" font-family="Arial Black,sans-serif" font-weight="900">t</text>
+          </svg>
+        </div>
+        <div>
+          <div style="color:white;font-size:17px;font-weight:900;">📅 الحجوزات اليومية</div>
+          <div style="color:rgba(255,255,255,0.55);font-size:12px;margin-top:2px;">تسجيل حضور وغياب وإجازات المناديب</div>
+        </div>
+      </div>
+
+      <!-- إحصائيات -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;">
+        <div style="background:linear-gradient(135deg,#2d6a4f,#52b788);border-radius:12px;padding:14px;text-align:center;">
+          <div id="rv_booked" style="font-size:26px;font-weight:900;color:white;">0</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:3px;">✅ حاجزين</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#e63946,#ff6b6b);border-radius:12px;padding:14px;text-align:center;">
+          <div id="rv_absent" style="font-size:26px;font-weight:900;color:white;">0</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:3px;">❌ غياب</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#f4a261,#e76f51);border-radius:12px;padding:14px;text-align:center;">
+          <div id="rv_leave" style="font-size:26px;font-weight:900;color:white;">0</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:3px;">🌴 إجازة</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#6c757d,#adb5bd);border-radius:12px;padding:14px;text-align:center;">
+          <div id="rv_none" style="font-size:26px;font-weight:900;color:white;">0</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:3px;">⏳ لم يُحدَّد</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <!-- اختيار التاريخ + أزرار جماعية -->
+        <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+          <div style="flex:1;min-width:160px;">
+            <label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">📅 تاريخ الجدول</label>
+            <input type="date" id="rv_date" onchange="renderReservations()" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;" />
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button onclick="setAllReservation('حاجز')" style="padding:9px 14px;background:#2d6a4f;color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:bold;">✅ كلهم حاجزين</button>
+            <button onclick="setAllReservation('غياب')" style="padding:9px 14px;background:#e63946;color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:bold;">❌ كلهم غياب</button>
+            <button onclick="setAllReservation('')"      style="padding:9px 14px;background:#adb5bd;color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:bold;">🔄 مسح الكل</button>
+          </div>
+        </div>
+
+        <!-- فلتر عرض -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+          <button class="filter-btn active" id="rv_f_all"    onclick="rvSetFilter('all',this)">الكل</button>
+          <button class="filter-btn"        id="rv_f_booked" onclick="rvSetFilter('حاجز',this)">✅ حاجزين</button>
+          <button class="filter-btn"        id="rv_f_absent" onclick="rvSetFilter('غياب',this)">❌ غياب</button>
+          <button class="filter-btn"        id="rv_f_leave"  onclick="rvSetFilter('إجازة',this)">🌴 إجازة</button>
+          <button class="filter-btn"        id="rv_f_none"   onclick="rvSetFilter('',this)">⏳ لم يُحدَّد</button>
+        </div>
+
+        <!-- قائمة المناديب -->
+        <div id="rv_list"></div>
+      </div>
+
+    </div>
+
+    <!-- ADMIN -->
+    <div id="sec-admin" class="section">
+      <div style="background:linear-gradient(135deg,#FF6B00,#ff8c00);border-radius:16px;padding:20px;margin-bottom:20px;color:white;text-align:center;">
+        <div style="font-size:28px;font-weight:900;font-family:Arial Black;">⚙️ لوحة الأدمن</div>
+        <div style="font-size:13px;opacity:0.85;margin-top:4px;">إدارة الأكونتات — Almalki13</div>
+      </div>
+
+      <div class="card">
+        <h3>➕ إضافة أكونت جديد</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>اسم المستخدم</label>
+            <input type="text" id="newAccUser" placeholder="Username" style="direction:ltr;" />
+          </div>
+          <div class="form-group">
+            <label>كلمة المرور</label>
+            <input type="text" id="newAccPass" placeholder="Password" style="direction:ltr;" />
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="addAccount()">➕ إضافة الأكونت</button>
+      </div>
+
+      <div class="card">
+        <h3>👥 الأكونتات الحالية</h3>
+        <div id="accountsList"></div>
+      </div>
+    </div>
+
+    <!-- ASSIGNMENTS -->
+    <div id="sec-assignments" class="section">
+      <div class="card">
+        <h3>📨 إضافة تعيين من رسالة</h3>
+        <div class="form-group">
+          <label>الصق الرسالة هنا</label>
+          <textarea id="assignMsg" rows="4" placeholder="الصق نص الرسالة..." style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;direction:rtl;"></textarea>
+        </div>
+        <button class="btn btn-warning btn-block" onclick="extractAssignment()" style="margin-bottom:12px;">🔍 استخراج البيانات</button>
+        <div class="form-row">
+          <div class="form-group">
+            <label>اسم الطيار</label>
+            <input type="text" id="assignName" placeholder="الاسم" />
+          </div>
+          <div class="form-group">
+            <label>رقم الموبايل</label>
+            <input type="text" id="assignPhone" placeholder="01xxxxxxxxx" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>النوع</label>
+          <select id="assignType">
+            <option value="موتوسيكل">🏍️ موتوسيكل</option>
+            <option value="عجلة">🚗 عجلة</option>
+            <option value="أخرى">❓ أخرى</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>ملاحظات (اختياري)</label>
+          <input type="text" id="assignNotes" placeholder="ملاحظات" />
+        </div>
+        <button class="btn btn-primary btn-block" onclick="saveAssignment()">💾 حفظ التعيين</button>
+      </div>
+      <div class="card">
+        <h3>📋 التعيينات المسجّلة</h3>
+        <p style="font-size:12px;color:#999;margin-bottom:12px;">اضغط على الرقم لفتح واتساب</p>
+        <div id="assignmentsList"></div>
+      </div>
+    </div>
+
+    <!-- ============ القبض والمديونيات ============ -->
+    <div id="sec-collections" class="section">
+      <div class="card">
+        <h3>💵 القبض والمديونيات</h3>
+
+        <!-- Month selector + upload row -->
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px;">
+          <div style="flex:1;min-width:180px;">
+            <label style="display:block;font-size:13px;font-weight:bold;color:#555;margin-bottom:6px;">📅 اختار الشهر</label>
+            <select id="col_month_select" onchange="colSwitchMonth(this.value)"
+              style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;direction:rtl;cursor:pointer;">
+              <option value="">-- اختار شهر --</option>
+            </select>
+          </div>
+          <div style="flex:1;min-width:200px;">
+            <label style="display:block;font-size:13px;font-weight:bold;color:#555;margin-bottom:6px;">📂 رفع شيت جديد</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" id="col_month_name" placeholder="اسم الشهر مثلاً: مايو 2025"
+                style="flex:1;padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;direction:rtl;">
+              <div id="col_upload_area" style="border:2px dashed #FF6B00;border-radius:8px;padding:10px 16px;text-align:center;cursor:pointer;white-space:nowrap;font-weight:bold;font-size:13px;color:#FF6B00;transition:background 0.2s;"
+                onclick="document.getElementById('col_file_input').click();"
+                ondragover="event.preventDefault();this.style.background='#fff5ee';"
+                ondragleave="this.style.background=''"
+                ondrop="handleColDrop(event)">
+                📂 ارفع شيت
+                <input type="file" id="col_file_input" accept=".xlsx,.xls" style="display:none;" onchange="handleColFile(this.files[0])">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="col_upload_status" style="display:none;text-align:center;margin-bottom:16px;font-size:14px;color:#2d6a4f;font-weight:bold;"></div>
+
+        <!-- Stats -->
+        <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;" id="col_stats_area" style="display:none;">
+          <div class="stat-card" style="flex:1;min-width:140px;border-right:4px solid #2d6a4f;">
+            <div class="stat-num" id="col_positive_count" style="color:#2d6a4f;">—</div>
+            <div class="stat-label">طيارين مستحق لهم</div>
+          </div>
+          <div class="stat-card" style="flex:1;min-width:140px;border-right:4px solid #FF6B00;">
+            <div class="stat-num" id="col_negative_count" style="color:#FF6B00;">—</div>
+            <div class="stat-label">طيارين عليهم مديونية</div>
+          </div>
+          <div class="stat-card" style="flex:1;min-width:140px;border-right:4px solid #2d6a4f;">
+            <div class="stat-num" id="col_positive_sum" style="color:#2d6a4f;font-size:18px;">—</div>
+            <div class="stat-label">إجمالي المستحق (موجب)</div>
+          </div>
+          <div class="stat-card" style="flex:1;min-width:140px;border-right:4px solid #FF6B00;">
+            <div class="stat-num" id="col_negative_sum" style="color:#FF6B00;font-size:18px;">—</div>
+            <div class="stat-label">إجمالي المديونية (سالب)</div>
+          </div>
+          <div class="stat-card" style="flex:1;min-width:140px;border-right:4px solid #1a7a4a;background:#f0fff4;">
+            <div class="stat-num" id="col_collected_count" style="color:#1a7a4a;">—</div>
+            <div class="stat-label">تم تحصيلهم ✅</div>
+          </div>
+          <div class="stat-card" style="flex:1;min-width:140px;border-right:4px solid #1a7a4a;background:#f0fff4;">
+            <div class="stat-num" id="col_collected_sum" style="color:#1a7a4a;font-size:18px;">—</div>
+            <div class="stat-label">إجمالي المحصّل ✅</div>
+          </div>
+          <div class="stat-card" style="flex:1;min-width:140px;border-right:4px solid #1a4a8a;background:#f0f4ff;">
+            <div class="stat-num" id="col_paid_count" style="color:#1a4a8a;">—</div>
+            <div class="stat-label">تحصيل مديونيات 💰</div>
+          </div>
+          <div class="stat-card" style="flex:1;min-width:140px;border-right:4px solid #1a4a8a;background:#f0f4ff;">
+            <div class="stat-num" id="col_paid_sum" style="color:#1a4a8a;font-size:18px;">—</div>
+            <div class="stat-label">إجمالي تحصيل المديونيات 💰</div>
+          </div>
+          <div class="stat-card" style="flex:1;min-width:140px;border-right:4px solid #0a6a3a;background:#e8fff4;">
+            <div class="stat-num" id="col_pos_paid_count" style="color:#0a6a3a;">—</div>
+            <div class="stat-label">قبض المستحقات ✅</div>
+          </div>
+          <div class="stat-card" style="flex:1;min-width:140px;border-right:4px solid #0a6a3a;background:#e8fff4;">
+            <div class="stat-num" id="col_pos_paid_sum" style="color:#0a6a3a;font-size:18px;">—</div>
+            <div class="stat-label">إجمالي المستحقات المقبوضة ✅</div>
+          </div>
+        </div>
+
+        <div id="col_tables_area">
+          <h3 style="color:#2d6a4f;margin-bottom:12px;">✅ المستحق للطيار — موجب</h3>
+          <div style="overflow-x:auto;margin-bottom:28px;">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+              <thead>
+                <tr style="background:#2d6a4f;color:white;">
+                  <th style="padding:10px 8px;text-align:right;">Rider ID</th>
+                  <th style="padding:10px 8px;text-align:right;">اسم الموظف</th>
+                  <th style="padding:10px 8px;text-align:right;">نقطة الفتح</th>
+                  <th style="padding:10px 8px;text-align:center;">أوردرات</th>
+                  <th style="padding:10px 8px;text-align:center;">رصيد المحفظة</th>
+                  <th style="padding:10px 8px;text-align:center;">المستحق للطيار</th>
+                  <th style="padding:10px 8px;text-align:right;">المشرف</th>
+                  <th style="padding:10px 8px;text-align:center;">الحالة</th>
+                </tr>
+              </thead>
+              <tbody id="col_positive_tbody"></tbody>
+            </table>
+          </div>
+
+          <!-- قايمة قبض المستحقات -->
+          <div id="col_pos_paid_section" style="display:none;margin-top:0;margin-bottom:28px;">
+            <h3 style="color:#0a6a3a;margin-bottom:4px;">✅ تم قبض مستحقاتهم</h3>
+            <p style="font-size:12px;color:#888;margin-bottom:12px;">اضغط "↩" لإرجاعه لقايمة المستحقات</p>
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead>
+                  <tr style="background:#0a6a3a;color:white;">
+                    <th style="padding:10px 8px;text-align:right;">Rider ID</th>
+                    <th style="padding:10px 8px;text-align:right;">اسم الموظف</th>
+                    <th style="padding:10px 8px;text-align:right;">نقطة الفتح</th>
+                    <th style="padding:10px 8px;text-align:center;">المستحق</th>
+                    <th style="padding:10px 8px;text-align:right;">المشرف</th>
+                    <th style="padding:10px 8px;text-align:center;"></th>
+                  </tr>
+                </thead>
+                <tbody id="col_pos_paid_tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- قايمة الفيزا — ثابتة عبر الشهور -->
+          <div id="col_visa_section" style="display:none;margin-bottom:28px;">
+            <h3 style="color:#1a4a8a;margin-bottom:4px;">💳 بيقبضوا فيزا</h3>
+            <p style="font-size:12px;color:#888;margin-bottom:12px;">هذه القايمة ثابتة — بتظهر في كل الشهور</p>
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead>
+                  <tr style="background:#1a4a8a;color:white;">
+                    <th style="padding:10px 8px;text-align:right;">Rider ID</th>
+                    <th style="padding:10px 8px;text-align:right;">اسم الموظف</th>
+                    <th style="padding:10px 8px;text-align:right;">نقطة الفتح</th>
+                    <th style="padding:10px 8px;text-align:center;">المستحق</th>
+                    <th style="padding:10px 8px;text-align:right;">المشرف</th>
+                  </tr>
+                </thead>
+                <tbody id="col_visa_tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <h3 style="color:#FF6B00;margin-bottom:12px;">🔴 المديونية على الطيار — سالب</h3>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+              <thead>
+                <tr style="background:#FF6B00;color:white;">
+                  <th style="padding:10px 8px;text-align:right;">Rider ID</th>
+                  <th style="padding:10px 8px;text-align:right;">اسم الموظف</th>
+                  <th style="padding:10px 8px;text-align:right;">نقطة الفتح</th>
+                  <th style="padding:10px 8px;text-align:center;">أوردرات</th>
+                  <th style="padding:10px 8px;text-align:center;">رصيد المحفظة</th>
+                  <th style="padding:10px 8px;text-align:center;">المديونية</th>
+                  <th style="padding:10px 8px;text-align:right;">المشرف</th>
+                  <th style="padding:10px 8px;text-align:center;">الحالة</th>
+                </tr>
+              </thead>
+              <tbody id="col_negative_tbody"></tbody>
+            </table>
+          </div>
+
+          <!-- قايمة تم التحصيل -->
+          <div id="col_collected_section" style="display:none;margin-top:28px;">
+            <h3 style="color:#2d6a4f;margin-bottom:4px;">✅ تم التحصيل منهم</h3>
+            <p style="font-size:12px;color:#888;margin-bottom:12px;">اضغط "إلغاء" لإرجاعه لقايمة المديونيات</p>
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead>
+                  <tr style="background:#2d6a4f;color:white;">
+                    <th style="padding:10px 8px;text-align:right;">Rider ID</th>
+                    <th style="padding:10px 8px;text-align:right;">اسم الموظف</th>
+                    <th style="padding:10px 8px;text-align:right;">نقطة الفتح</th>
+                    <th style="padding:10px 8px;text-align:center;">المديونية</th>
+                    <th style="padding:10px 8px;text-align:right;">المشرف</th>
+                    <th style="padding:10px 8px;text-align:center;"></th>
+                  </tr>
+                </thead>
+                <tbody id="col_collected_tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- قايمة المقبوض فعلاً -->
+          <div id="col_paid_section" style="display:none;margin-top:28px;">
+            <h3 style="color:#1a4a8a;margin-bottom:4px;">💰 قبضوا فعلاً</h3>
+            <p style="font-size:12px;color:#888;margin-bottom:12px;">اضغط "إلغاء" لإرجاعه لقايمة التحصيل</p>
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead>
+                  <tr style="background:#1a4a8a;color:white;">
+                    <th style="padding:10px 8px;text-align:right;">Rider ID</th>
+                    <th style="padding:10px 8px;text-align:right;">اسم الموظف</th>
+                    <th style="padding:10px 8px;text-align:right;">نقطة الفتح</th>
+                    <th style="padding:10px 8px;text-align:center;">المبلغ</th>
+                    <th style="padding:10px 8px;text-align:right;">المشرف</th>
+                    <th style="padding:10px 8px;text-align:center;"></th>
+                  </tr>
+                </thead>
+                <tbody id="col_paid_tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="payModal">
+  <div class="modal">
+    <h3>💰 تسجيل دفعة</h3>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:14px;color:#666;">المندوب: <strong id="payModalName"></strong></div>
+      <div style="font-size:14px;color:#FF6B00;margin-top:4px;">المتبقي: <strong id="payModalRemain"></strong></div>
+    </div>
+    <div class="form-group">
+      <label>المبلغ</label>
+      <input type="number" id="payAmount" placeholder="المبلغ بالجنيه" />
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-success" onclick="confirmPayment()">✅ تسجيل الدفعة</button>
+      <button class="btn btn-danger" onclick="confirmFire()">🚫 إقالة</button>
+      <button class="btn" style="background:#e0e0e0;" onclick="closePayModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h3 id="editModalTitle">✏️ تعديل</h3>
+    <div id="editModalBody"></div>
+    <div class="modal-btns">
+      <button class="btn btn-primary" id="editModalSaveBtn">💾 حفظ</button>
+      <button class="btn" style="background:#e0e0e0;" onclick="closeEditModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== STATE ====================
+let state = {
+  mandoubs: {},
+  payments: {},
+  treasury: { balance: 0, log: [] },
+  custody: [],
+  fired: {},
+  inventory: { tshirt: 0, bag_bike: 0, bag_car: 0, security: 0, log: [] },
+  assignments: [],
+  officepower: [],
+  portfired: [],
+  agentstrength: [],
+  reservations: {}
+};
+
+let selectedMandoubId = null;
+let currentFilter = 'all';
+let imgBase64 = '';
+
+// ==================== EDIT MODAL ====================
+function openEditModal(title, bodyHTML, onSave) {
+  document.getElementById('editModalTitle').textContent = title;
+  document.getElementById('editModalBody').innerHTML = bodyHTML;
+  document.getElementById('editModal').classList.add('show');
+  const saveBtn = document.getElementById('editModalSaveBtn');
+  saveBtn.onclick = async () => { await onSave(); closeEditModal(); };
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('show');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEditModal();
+  });
+});
+
+// ==================== USERS ====================
+const ADMIN_USER = 'Almalki13'; // case-insensitive compared
+let USERS = {}; // loaded from Firebase
+
+// ==================== LOGIN ====================
+async function doLogin() {
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value.trim();
+  if (!u || !p) return;
+  document.getElementById('loginError').style.display = 'none';
+
+  // Always allow admin with hardcoded fallback first time
+  if (!window.firebaseReady) {
+    document.getElementById('loginError').style.display = 'block';
+    return;
+  }
+
+  // Load accounts from Firebase
+  const db = window.db;
+  const ref = window.dbRef;
+  const get = window.dbGet;
+  try {
+    const snap = await get(ref(db, 'accounts'));
+    const accounts = snap.val() || {};
+    // Merge with hardcoded admin
+    // ensure admin always exists regardless of case
+    const adminKey = Object.keys(accounts).find(k=>k.toLowerCase()==='almalki13');
+    if (!adminKey) accounts['Almalki13'] = '1310';
+    USERS = accounts;
+  } catch(e) {
+    USERS = { 'Almalki13': '1310' };
+  }
+
+  // case-insensitive username check
+  const uLower = u.toLowerCase();
+  const matchedKey = Object.keys(USERS).find(k => k.toLowerCase() === uLower);
+  if (matchedKey && USERS[matchedKey] === p) {
+    currentUser = matchedKey;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    const isAdmin = currentUser.toLowerCase() === ADMIN_USER.toLowerCase();
+    if (isAdmin) {
+      document.querySelectorAll('.tab').forEach(t => t.style.display = 'none');
+      document.getElementById('adminTabBtn').style.display = 'block';
+      document.getElementById('adminTabBtn').classList.add('active');
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById('sec-admin').classList.add('active');
+      document.querySelector('.btn-excel').style.display = 'none';
+    } else {
+      document.getElementById('adminTabBtn').style.display = 'none';
+    }
+    initFirebase();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+function doLogout() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+  currentUser = '';
+  state = {
+    mandoubs: {}, payments: {},
+    treasury: { balance: 0, log: [] },
+    custody: [], fired: {},
+    inventory: { tshirt: 0, bag_bike: 0, bag_car: 0, security: 0, log: [] },
+    assignments: [], officepower: [], portfired: [], agentstrength: [], reservations: {}
+  };
+  document.querySelectorAll('.tab').forEach(t => t.style.display = '');
+  document.getElementById('adminTabBtn').style.display = 'none';
+  document.querySelector('.btn-excel').style.display = '';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.tab').classList.add('active');
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-register').classList.add('active');
+}
+
+document.addEventListener('keypress', e => {
+  if (e.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none') doLogin();
+});
+
+// ==================== FIREBASE ====================
+function initFirebase() {
+  if (!window.firebaseReady) {
+    document.addEventListener('firebaseReady', initFirebase, { once: true });
+    return;
+  }
+  if (currentUser.toLowerCase() === ADMIN_USER.toLowerCase()) {
+    loadAdminPanel();
+    return;
+  }
+  listenToData();
+}
+
+let currentUser = '';
+
+function listenToData() {
+  const db = window.db;
+  const ref = window.dbRef;
+  const onValue = window.dbOnValue;
+
+  onValue(ref(db, 'users/' + currentUser), (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      state.mandoubs = data.mandoubs || {};
+      state.payments = data.payments || {};
+      state.treasury = data.treasury || { balance: 0, log: [] };
+      state.custody = data.custody || [];
+      state.fired = data.fired || {};
+      state.inventory = data.inventory || { tshirt: 0, bag_bike: 0, bag_car: 0, security: 0, log: [] };
+      state.assignments = data.assignments || [];
+      state.officepower = data.officepower || [];
+      state.portfired = data.portfired || [];
+      state.agentstrength = data.agentstrength || [];
+      state.reservations  = data.reservations  || {};
+    }
+    renderAll();
+  });
+}
+
+async function saveToFirebase() {
+  const db = window.db;
+  const ref = window.dbRef;
+  const set = window.dbSet;
+  try {
+    const { reservations, ...stateToSave } = state;
+    await set(ref(db, 'users/' + currentUser), stateToSave);
+  } catch (e) {
+    showToast('خطأ في الحفظ: ' + e.message);
+  }
+}
+
+// ==================== TABS ====================
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const tabs = ['register','mandoubs','payments','treasury','custody','fired','totals','inventory','assignments','debtsummary','collections','officepower','agentstrength','reservations','admin'];
+    t.classList.toggle('active', tabs[i] === name);
+  });
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  if (name === 'mandoubs') renderMandoubs();
+  if (name === 'payments') renderPaymentSelect();
+  if (name === 'treasury') renderTreasury();
+  if (name === 'custody') renderCustody();
+  if (name === 'fired') renderFiredUnified();
+  if (name === 'totals') renderTotals();
+  if (name === 'inventory') renderInventory();
+  if (name === 'assignments') renderAssignments();
+  if (name === 'debtsummary') renderDebtSummary();
+  if (name === 'officepower') renderOfficePower();
+  if (name === 'agentstrength') renderAgentStrength();
+  if (name === 'reservations') {
+    const d = document.getElementById('rv_date');
+    if (d && !d.value) d.value = new Date().toISOString().split('T')[0];
+    // attach onchange to re-listen when date changes
+    if (d) d.onchange = () => listenToReservationsDate(d.value);
+    listenToReservationsDate(document.getElementById('rv_date')?.value);
+  }
+  if (name === 'admin') loadAdminPanel();
+  if (name === 'collections') renderCollections();
+}
+
+
+// ==================== COLLECTIONS (UPLOAD) ====================
+// Requires SheetJS loaded dynamically
+let _xlsxLoaded = false;
+function loadXlsx(cb) {
+  if (_xlsxLoaded) { cb(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  s.onload = () => { _xlsxLoaded = true; cb(); };
+  document.head.appendChild(s);
+}
+
+function handleColDrop(e) {
+  e.preventDefault();
+  document.getElementById('col_upload_area').style.background = '';
+  const file = e.dataTransfer.files[0];
+  if (file) handleColFile(file);
+}
+
+function handleColFile(file) {
+  if (!file) return;
+  const status = document.getElementById('col_upload_status');
+  status.style.display = 'block';
+  status.style.color = '#FF6B00';
+  status.textContent = '⏳ جاري قراءة الملف...';
+
+  loadXlsx(() => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+        if (!rows.length) { status.textContent = '❌ الملف فاضي أو مش صح'; status.style.color='#FF6B00'; return; }
+
+        // Map columns — find column names dynamically
+        const firstRow = rows[0];
+        const keys = Object.keys(firstRow);
+
+        // Helper: find key by partial match (case-insensitive, Arabic or English)
+        function findKey(patterns) {
+          return keys.find(k => patterns.some(p => k.toString().toLowerCase().includes(p.toLowerCase()))) || null;
+        }
+
+        // Support both Arabic-header sheets and English-header sheets
+        const kId     = findKey(['Rider Id','Rider ID','rider id','rider_id','ID']);
+        const kName   = findKey(['Rider Name','rider name','اسم الموظف','اسم']);
+        const kBranch = findKey(['Starting Point','starting point','نقطة الفتح','نقطة']);
+        const kOrders = findKey(['اوردرات الاسبوع','أوردرات الأسبوع','Total Orders','total orders','أوردرات','اوردرات']);
+        const kWallet = findKey(['رصيد المحفظة','رصيد المحفظه','رصيد']);
+        const kDue    = findKey(['المستحق للطيار','المستحق']);
+        const kSuper  = findKey(['اسم المشرف','المشرف']);
+        const kWeek   = findKey(['الأسبوع','أسبوع']);
+
+        if (!kDue) {
+          // show available columns to help debug
+          status.textContent = '❌ مش لاقي عمود "المستحق للطيار". الأعمدة الموجودة: ' + keys.slice(0,8).join(' | ');
+          status.style.color = '#FF6B00';
+          return;
+        }
+
+        const week = kWeek ? (rows[0][kWeek] || '') : '';
+
+        // Filter out summary rows (rows where id is empty/non-numeric)
+        const parsed = rows
+          .filter(r => {
+            const id = String(r[kId] || '').trim();
+            return id && /^\d+/.test(id);
+          })
+          .map(r => ({
+            id:         String(r[kId]   || '').trim(),
+            name:       String(r[kName] || '').replace(/_[A-Z ]+$/,'').trim(),
+            branch:     String(r[kBranch] || '').trim(),
+            orders:     parseFloat(r[kOrders]) || 0,
+            wallet:     parseFloat(r[kWallet]) || 0,
+            due:        parseFloat(r[kDue])    || 0,
+            supervisor: String(r[kSuper] || '').trim()
+          }))
+          .filter(r => r.due !== 0);
+
+        const monthInput = document.getElementById('col_month_name');
+        const label = (monthInput && monthInput.value.trim()) ? monthInput.value.trim() : (week || 'شهر ' + new Date().toLocaleDateString('ar-EG',{month:'long',year:'numeric'}));
+        if (monthInput) monthInput.value = '';
+
+        status.style.color = '#2d6a4f';
+        status.textContent = '✅ تم تحميل ' + rows.length + ' طيار — ' + label;
+
+        renderCollectionsData(parsed, label);
+      } catch(err) {
+        status.textContent = '❌ خطأ في قراءة الملف: ' + err.message;
+        status.style.color = '#FF6B00';
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// ==================== COLLECTIONS (MULTI-MONTH) ====================
+// Data structure stored in localStorage:
+// colMonths: { [monthKey]: { label, data:[{id,name,branch,orders,wallet,due,supervisor}], collected:[ids], paid:[ids] } }
+// colActiveMonth: currently selected monthKey
+
+let _colMonths      = {};   // all months data
+let _colActiveMonth = null; // currently viewed month key
+let _colVisaRiders  = new Set(); // rider IDs who pay by visa (permanent, cross-month)
+
+// ── persistence ──────────────────────────────────────────────────────────────
+// Uses localStorage + sessionStorage + hidden DOM textarea as triple backup
+// so data survives tab switches, refreshes, and file:// restrictions
+
+function _colSerialize() {
+  return JSON.stringify({ months: _colMonths, active: _colActiveMonth || '', visa: [..._colVisaRiders] });
+}
+
+function _colSave() {
+  const val = _colSerialize();
+  try { localStorage.setItem('colData_v2', val); } catch(e) {}
+  try { sessionStorage.setItem('colData_v2', val); } catch(e) {}
+  let ta = document.getElementById('_colStore');
+  if (!ta) {
+    ta = document.createElement('textarea');
+    ta.id = '_colStore';
+    ta.style.display = 'none';
+    document.body.appendChild(ta);
+  }
+  ta.value = val;
+}
+
+function _colLoad() {
+  let raw = null;
+  try { raw = localStorage.getItem('colData_v2'); } catch(e) {}
+  if (!raw) { try { raw = sessionStorage.getItem('colData_v2'); } catch(e) {} }
+  if (!raw) { const ta = document.getElementById('_colStore'); if (ta) raw = ta.value; }
+  if (!raw) return;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed.months) _colMonths = parsed.months;
+    if (parsed.visa)   _colVisaRiders = new Set(parsed.visa.map(String));
+    if (parsed.active && _colMonths[parsed.active]) _colActiveMonth = parsed.active;
+    else if (Object.keys(_colMonths).length) _colActiveMonth = Object.keys(_colMonths).slice(-1)[0];
+  } catch(e) {}
+}
+
+// Load immediately and also re-load when tab becomes visible again
+_colLoad();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    _colLoad();
+    // re-render if collections tab is active
+    if (document.getElementById('sec-collections')?.style.display !== 'none') {
+      _colBuildMonthSelect();
+      _renderColTables();
+    }
+  }
+});
+
+// ── month helpers ─────────────────────────────────────────────────────────────
+function _colActiveData()      { return _colMonths[_colActiveMonth] || null; }
+function _colActiveCollected() { return new Set((_colActiveData()?.collected || []).map(String)); }
+function _colActivePaid()      { return new Set((_colActiveData()?.paid      || []).map(String)); }
+
+function _colBuildMonthSelect() {
+  const sel = document.getElementById('col_month_select');
+  if (!sel) return;
+  const keys = Object.keys(_colMonths);
+  sel.innerHTML = keys.length
+    ? keys.map(k => `<option value="${k}"${k===_colActiveMonth?' selected':''}>${_colMonths[k].label}</option>`).join('')
+    : '<option value="">-- مفيش شهور محفوظة --</option>';
+}
+
+function colSwitchMonth(key) {
+  if (!key || !_colMonths[key]) return;
+  _colActiveMonth = key;
+  _colSave();
+  _renderColTables();
+  const status = document.getElementById('col_upload_status');
+  if (status) { status.style.display='block'; status.style.color='#2d6a4f'; status.textContent='✅ '+_colMonths[key].label+' — '+_colMonths[key].data.length+' طيار'; }
+}
+
+// ── upload & parse ────────────────────────────────────────────────────────────
+function colToggleVisa(id) {
+  id = String(id);
+  if (_colVisaRiders.has(id)) _colVisaRiders.delete(id);
+  else _colVisaRiders.add(id);
+  _colSave();
+  _renderColTables();
+}
+
+function renderCollectionsData(data, label) {
+  const key = 'month_' + Date.now();
+  _colMonths[key] = { label, data, collected: [], paid: [], posPaid: [] };
+  _colActiveMonth = key;
+  _colSave();
+  _colBuildMonthSelect();
+  _renderColTables();
+}
+
+function colMarkCollected(id) {
+  const m = _colActiveData(); if (!m) return;
+  if (!m.collected.includes(String(id))) m.collected.push(String(id));
+  _colSave(); _renderColTables();
+}
+function colUnmarkCollected(id) {
+  const m = _colActiveData(); if (!m) return;
+  m.collected = m.collected.filter(x => x !== String(id));
+  _colSave(); _renderColTables();
+}
+function colMarkPaid(id) {
+  const m = _colActiveData(); if (!m) return;
+  if (!m.paid.includes(String(id))) m.paid.push(String(id));
+  // remove from collected too
+  m.collected = m.collected.filter(x => x !== String(id));
+  _colSave(); _renderColTables();
+}
+function colUnmarkPaid(id) {
+  const m = _colActiveData(); if (!m) return;
+  m.paid = m.paid.filter(x => x !== String(id));
+  if (!m.collected.includes(String(id))) m.collected.push(String(id));
+  _colSave(); _renderColTables();
+}
+
+function colMarkPosPaid(id) {
+  const m = _colActiveData(); if (!m) return;
+  if (!m.posPaid) m.posPaid = [];
+  if (!m.posPaid.includes(String(id))) m.posPaid.push(String(id));
+  _colSave(); _renderColTables();
+}
+
+function colUnmarkPosPaid(id) {
+  const m = _colActiveData(); if (!m) return;
+  if (!m.posPaid) m.posPaid = [];
+  m.posPaid = m.posPaid.filter(x => x !== String(id));
+  _colSave(); _renderColTables();
+}
+
+function _renderColTables() {
+  const m = _colActiveData();
+  if (!m) return;
+  const data      = m.data;
+  const collected = new Set(m.collected.map(String));
+  const paid      = new Set(m.paid.map(String));
+  const posPaid   = new Set((m.posPaid || []).map(String));
+
+  const posPending   = data.filter(r => r.due > 0 && !posPaid.has(String(r.id))).sort((a,b) => b.due - a.due);
+  const posPaidList  = data.filter(r => r.due > 0 &&  posPaid.has(String(r.id))).sort((a,b) => b.due - a.due);
+  const negPending   = data.filter(r => r.due < 0 && !collected.has(String(r.id)) && !paid.has(String(r.id))).sort((a,b) => a.due - b.due);
+  const negCollected = data.filter(r => r.due < 0 &&  collected.has(String(r.id)) && !paid.has(String(r.id))).sort((a,b) => a.due - b.due);
+  const negPaid      = data.filter(r => r.due < 0 &&  paid.has(String(r.id))).sort((a,b) => a.due - b.due);
+
+  document.getElementById('col_positive_count').textContent = posPending.length;
+  document.getElementById('col_negative_count').textContent = negPending.length;
+  document.getElementById('col_positive_sum').textContent = posPending.reduce((s,r) => s + r.due, 0).toFixed(2) + ' ج';
+  document.getElementById('col_negative_sum').textContent = Math.abs(negPending.reduce((s,r) => s + r.due, 0)).toFixed(2) + ' ج';
+  document.getElementById('col_collected_count').textContent = negCollected.length;
+  document.getElementById('col_collected_sum').textContent = negCollected.length ? Math.abs(negCollected.reduce((s,r) => s + r.due, 0)).toFixed(2) + ' ج' : '—';
+  document.getElementById('col_paid_count').textContent = negPaid.length || '—';
+  document.getElementById('col_paid_sum').textContent = negPaid.length ? Math.abs(negPaid.reduce((s,r) => s + r.due, 0)).toFixed(2) + ' ج' : '—';
+  document.getElementById('col_pos_paid_count').textContent = posPaidList.length || '—';
+  document.getElementById('col_pos_paid_sum').textContent = posPaidList.length ? posPaidList.reduce((s,r) => s + r.due, 0).toFixed(2) + ' ج' : '—';
+
+  // Positive pending table
+  const posTbody = document.getElementById('col_positive_tbody');
+  posTbody.innerHTML = '';
+  posPending.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.style.cssText = `background:${i%2===0?'#f0fff4':'white'};border-bottom:1px solid #e0e0e0;`;
+    const isVisa = _colVisaRiders.has(String(r.id));
+    tr.innerHTML = `
+      <td style="padding:9px 8px;font-size:12px;color:#555;">${r.id}</td>
+      <td style="padding:9px 8px;font-weight:bold;">${r.name}${isVisa ? ' <span style=\'background:#1a4a8a;color:white;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:bold;\'>💳 فيزا</span>' : ''}</td>
+      <td style="padding:9px 8px;font-size:12px;color:#666;">${r.branch}</td>
+      <td style="padding:9px 8px;text-align:center;">${r.orders}</td>
+      <td style="padding:9px 8px;text-align:center;color:#555;">${r.wallet.toFixed(2)}</td>
+      <td style="padding:9px 8px;text-align:center;font-weight:900;color:#2d6a4f;font-size:15px;">${r.due.toFixed(2)} ج</td>
+      <td style="padding:9px 8px;font-size:12px;color:#666;">${r.supervisor}</td>
+      <td style="padding:9px 8px;text-align:center;display:flex;gap:5px;flex-wrap:wrap;justify-content:center;"></td>
+    `;
+    const btn = document.createElement('button');
+    btn.textContent = '💰 قبض';
+    btn.style.cssText = 'background:#0a6a3a;color:white;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:bold;font-family:inherit;white-space:nowrap;';
+    btn.addEventListener('click', () => colMarkPosPaid(String(r.id)));
+    const btnVisa = document.createElement('button');
+    btnVisa.textContent = isVisa ? '💳 فيزا ✓' : '💳 فيزا';
+    btnVisa.style.cssText = `background:${isVisa?'#1a4a8a':'#e8eef8'};color:${isVisa?'white':'#1a4a8a'};border:1px solid #1a4a8a;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:bold;font-family:inherit;white-space:nowrap;`;
+    btnVisa.addEventListener('click', () => colToggleVisa(String(r.id)));
+    tr.lastElementChild.appendChild(btn);
+    tr.lastElementChild.appendChild(btnVisa);
+    posTbody.appendChild(tr);
+  });
+
+  // Visa riders section (cross-month)
+  const visaSec = document.getElementById('col_visa_section');
+  if (visaSec) {
+    const visaInThisMonth = data.filter(r => r.due > 0 && _colVisaRiders.has(String(r.id)));
+    visaSec.style.display = visaInThisMonth.length ? '' : 'none';
+    const visaTbody = document.getElementById('col_visa_tbody');
+    if (visaTbody) {
+      visaTbody.innerHTML = '';
+      visaInThisMonth.sort((a,b) => b.due - a.due).forEach((r, i) => {
+        const tr = document.createElement('tr');
+        tr.style.cssText = `background:${i%2===0?'#eef2ff':'white'};border-bottom:1px solid #e0e0e0;`;
+        tr.innerHTML = `
+          <td style="padding:9px 8px;font-size:12px;color:#555;">${r.id}</td>
+          <td style="padding:9px 8px;font-weight:bold;color:#1a4a8a;">${r.name} <span style='background:#1a4a8a;color:white;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:bold;'>💳 فيزا</span></td>
+          <td style="padding:9px 8px;font-size:12px;color:#666;">${r.branch}</td>
+          <td style="padding:9px 8px;text-align:center;font-weight:900;color:#1a4a8a;font-size:15px;">${r.due.toFixed(2)} ج</td>
+          <td style="padding:9px 8px;font-size:12px;color:#666;">${r.supervisor}</td>
+        `;
+        visaTbody.appendChild(tr);
+      });
+    }
+  }
+
+  // Positive paid section
+  const posPaidSec = document.getElementById('col_pos_paid_section');
+  posPaidSec.style.display = posPaidList.length ? '' : 'none';
+  const posPaidTbody = document.getElementById('col_pos_paid_tbody');
+  posPaidTbody.innerHTML = '';
+  posPaidList.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.style.cssText = `background:${i%2===0?'#e8fff4':'white'};border-bottom:1px solid #e0e0e0;`;
+    const isPaidVisa = _colVisaRiders.has(String(r.id));
+    tr.innerHTML = `
+      <td style="padding:9px 8px;font-size:12px;color:#555;">${r.id}</td>
+      <td style="padding:9px 8px;font-weight:bold;color:#0a6a3a;">${r.name}${isPaidVisa ? ' <span style=\'background:#1a4a8a;color:white;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:bold;\'>💳 فيزا</span>' : ''}</td>
+      <td style="padding:9px 8px;font-size:12px;color:#666;">${r.branch}</td>
+      <td style="padding:9px 8px;text-align:center;font-weight:900;color:#0a6a3a;font-size:15px;">${r.due.toFixed(2)} ج ✅</td>
+      <td style="padding:9px 8px;font-size:12px;color:#666;">${r.supervisor}</td>
+      <td style="padding:9px 8px;text-align:center;"></td>
+    `;
+    const btnUndo = document.createElement('button');
+    btnUndo.textContent = '↩ إلغاء';
+    btnUndo.style.cssText = 'background:#f0f0f0;color:#666;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-family:inherit;';
+    btnUndo.addEventListener('click', () => colUnmarkPosPaid(String(r.id)));
+    tr.lastElementChild.appendChild(btnUndo);
+    posPaidTbody.appendChild(tr);
+  });
+
+  // Negative pending table
+  const negTbody = document.getElementById('col_negative_tbody');
+  negTbody.innerHTML = '';
+  negPending.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.style.cssText = `background:${i%2===0?'#fff5ee':'white'};border-bottom:1px solid #e0e0e0;`;
+    tr.innerHTML = `
+      <td style="padding:9px 8px;font-size:12px;color:#555;">${r.id}</td>
+      <td style="padding:9px 8px;font-weight:bold;">${r.name}</td>
+      <td style="padding:9px 8px;font-size:12px;color:#666;">${r.branch}</td>
+      <td style="padding:9px 8px;text-align:center;">${r.orders}</td>
+      <td style="padding:9px 8px;text-align:center;color:#555;">${r.wallet.toFixed(2)}</td>
+      <td style="padding:9px 8px;text-align:center;font-weight:900;color:#FF6B00;font-size:15px;">${Math.abs(r.due).toFixed(2)} ج</td>
+      <td style="padding:9px 8px;font-size:12px;color:#666;">${r.supervisor}</td>
+      <td style="padding:9px 8px;text-align:center;"></td>
+    `;
+    const btn = document.createElement('button');
+    btn.textContent = '✅ تم اللمة';
+    btn.style.cssText = 'background:#2d6a4f;color:white;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:bold;font-family:inherit;white-space:nowrap;';
+    btn.addEventListener('click', () => colMarkCollected(String(r.id)));
+    tr.lastElementChild.appendChild(btn);
+    negTbody.appendChild(tr);
+  });
+
+  // Collected section
+  const sec = document.getElementById('col_collected_section');
+  sec.style.display = negCollected.length ? '' : 'none';
+  const colTbody = document.getElementById('col_collected_tbody');
+  colTbody.innerHTML = '';
+  negCollected.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.style.cssText = `background:${i%2===0?'#f0fff4':'white'};border-bottom:1px solid #e0e0e0;`;
+    tr.innerHTML = `
+      <td style="padding:9px 8px;font-size:12px;color:#555;">${r.id}</td>
+      <td style="padding:9px 8px;font-weight:bold;">${r.name}</td>
+      <td style="padding:9px 8px;font-size:12px;color:#666;">${r.branch}</td>
+      <td style="padding:9px 8px;text-align:center;font-weight:900;color:#2d6a4f;">${Math.abs(r.due).toFixed(2)} ج</td>
+      <td style="padding:9px 8px;font-size:12px;color:#666;">${r.supervisor}</td>
+      <td style="padding:9px 8px;text-align:center;display:flex;gap:6px;justify-content:center;"></td>
+    `;
+    const btnPaid = document.createElement('button');
+    btnPaid.textContent = '💰 قبض';
+    btnPaid.style.cssText = 'background:#1a4a8a;color:white;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:bold;font-family:inherit;white-space:nowrap;';
+    btnPaid.addEventListener('click', () => colMarkPaid(String(r.id)));
+    const btnUndo = document.createElement('button');
+    btnUndo.textContent = '↩';
+    btnUndo.style.cssText = 'background:#f0f0f0;color:#666;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-family:inherit;';
+    btnUndo.addEventListener('click', () => colUnmarkCollected(String(r.id)));
+    tr.lastElementChild.appendChild(btnPaid);
+    tr.lastElementChild.appendChild(btnUndo);
+    colTbody.appendChild(tr);
+  });
+
+  // Paid section
+  const paidSec = document.getElementById('col_paid_section');
+  paidSec.style.display = negPaid.length ? '' : 'none';
+  const paidTbody = document.getElementById('col_paid_tbody');
+  paidTbody.innerHTML = '';
+  negPaid.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.style.cssText = `background:${i%2===0?'#f0f4ff':'white'};border-bottom:1px solid #e0e0e0;`;
+    tr.innerHTML = `
+      <td style="padding:9px 8px;font-size:12px;color:#555;">${r.id}</td>
+      <td style="padding:9px 8px;font-weight:bold;color:#1a4a8a;">${r.name}</td>
+      <td style="padding:9px 8px;font-size:12px;color:#666;">${r.branch}</td>
+      <td style="padding:9px 8px;text-align:center;font-weight:900;color:#1a4a8a;font-size:15px;">${Math.abs(r.due).toFixed(2)} ج 💰</td>
+      <td style="padding:9px 8px;font-size:12px;color:#666;">${r.supervisor}</td>
+      <td style="padding:9px 8px;text-align:center;"></td>
+    `;
+    const btnUndo = document.createElement('button');
+    btnUndo.textContent = '↩ إلغاء';
+    btnUndo.style.cssText = 'background:#f0f0f0;color:#666;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-family:inherit;';
+    btnUndo.addEventListener('click', () => colUnmarkPaid(String(r.id)));
+    tr.lastElementChild.appendChild(btnUndo);
+    paidTbody.appendChild(tr);
+  });
+}
+
+function renderCollections() {
+  _colBuildMonthSelect();
+  if (_colActiveMonth && _colMonths[_colActiveMonth]) {
+    const m = _colMonths[_colActiveMonth];
+    const status = document.getElementById('col_upload_status');
+    if (status) { status.style.display='block'; status.style.color='#2d6a4f'; status.textContent='✅ '+m.label+' — '+m.data.length+' طيار'; }
+    _renderColTables();
+  }
+}
+
+// ==================== REGISTER ====================
+['regBag','regTshirt','regSecurity'].forEach(id => {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById(id) && document.getElementById(id).addEventListener('change', updateTotal);
+  });
+});
+document.addEventListener('change', e => {
+  if (['regBag','regTshirt','regSecurity'].includes(e.target.id)) updateTotal();
+});
+
+function updateTotal() {
+  const total = +document.getElementById('regBag').value + +document.getElementById('regTshirt').value + +document.getElementById('regSecurity').value;
+  document.getElementById('regTotal').textContent = total + ' ج';
+}
+
+function previewImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    imgBase64 = e.target.result;
+    document.getElementById('previewImg').src = imgBase64;
+    document.getElementById('previewImg').style.display = 'block';
+    document.getElementById('imgPlaceholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function registerMandoub() {
+  const name = document.getElementById('regName').value.trim();
+  if (!name) { showToast('ادخل اسم المندوب'); return; }
+  const bag = +document.getElementById('regBag').value;
+  const tshirt = +document.getElementById('regTshirt').value;
+  const security = +document.getElementById('regSecurity').value;
+  const total = bag + tshirt + security;
+  const id = Date.now().toString();
+  state.mandoubs[id] = {
+    id, name,
+    customId: document.getElementById('regId').value.trim(),
+    phone: document.getElementById('regPhone').value.trim(),
+    photo: imgBase64,
+    bag, tshirt, security,
+    totalDebt: total,
+    paid: 0,
+    date: new Date().toLocaleDateString('ar-EG'),
+    active: true
+  };
+  // Reset form
+  document.getElementById('regName').value = '';
+  document.getElementById('regId').value = '';
+  document.getElementById('regPhone').value = '';
+  document.getElementById('regBag').value = '0';
+  document.getElementById('regTshirt').value = '0';
+  document.getElementById('regSecurity').value = '0';
+  document.getElementById('regTotal').textContent = '0 ج';
+  document.getElementById('previewImg').style.display = 'none';
+  document.getElementById('imgPlaceholder').style.display = 'block';
+  imgBase64 = '';
+  document.getElementById('imgInput').value = '';
+  await saveToFirebase();
+  showToast('✅ تم تسجيل المندوب');
+}
+
+// ==================== MANDOUBS ====================
+function renderAll() {
+  renderMandoubs();
+  renderTreasury();
+  renderCustody();
+  renderFiredUnified();
+  renderInventory();
+  renderAssignments();
+  renderPaymentSelect();
+  updateCustodyStats();
+}
+
+function filterMandoubs(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMandoubs();
+}
+
+function renderMandoubs() {
+  const list = document.getElementById('mandoubsList');
+  let html = '';
+  const entries = Object.values(state.mandoubs).filter(m => m.active !== false);
+  const filtered = entries.filter(m => {
+    const rem = m.totalDebt - m.paid;
+    if (currentFilter === 'paid') return rem <= 0;
+    if (currentFilter === 'debt') return rem > 0;
+    if (currentFilter === 'active') return m.active !== false;
+    return true;
+  });
+  if (!filtered.length) { list.innerHTML = '<div class="empty-state">مفيش مناديب</div>'; return; }
+  filtered.sort((a,b) => (b.totalDebt - b.paid) - (a.totalDebt - a.paid));
+  filtered.forEach(m => {
+    const rem = m.totalDebt - m.paid;
+    const initial = m.name.charAt(0);
+    const photoHtml = m.photo ? `<img src="${m.photo}" />` : initial;
+    html += `<div class="mandoub-card${selectedMandoubId===m.id?' selected':''}" onclick="openPayModal('${m.id}')">
+      <div class="mandoub-header">
+        <div class="mandoub-avatar">${photoHtml}</div>
+        <div class="mandoub-info">
+          <div class="mandoub-name">${m.name} ${m.customId?'<span style="font-size:11px;color:#999;">#'+m.customId+'</span>':''}</div>
+          <div class="mandoub-details">
+            ${m.phone?'📱 '+m.phone+' · ':''}
+            مديون: ${m.totalDebt} ج · دفع: ${m.paid} ج
+          </div>
+          <div style="margin-top:4px;">${rem<=0?'<span class="badge badge-green">خلّص</span>':'<span class="badge badge-red">متبقي '+rem+' ج</span>'}</div>
+        </div>
+        <div class="mandoub-debt${rem<=0?' paid':''}">${rem} ج</div>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+// ==================== PAYMENT MODAL ====================
+function openPayModal(id) {
+  selectedMandoubId = id;
+  const m = state.mandoubs[id];
+  const rem = m.totalDebt - m.paid;
+  document.getElementById('payModalName').textContent = m.name;
+  document.getElementById('payModalRemain').textContent = rem + ' ج';
+  document.getElementById('payAmount').value = '';
+  document.getElementById('payModal').classList.add('show');
+}
+
+function closePayModal() {
+  document.getElementById('payModal').classList.remove('show');
+  selectedMandoubId = null;
+  renderMandoubs();
+}
+
+async function confirmPayment() {
+  const amount = +document.getElementById('payAmount').value;
+  if (!amount || amount <= 0) { showToast('ادخل مبلغ صحيح'); return; }
+  const m = state.mandoubs[selectedMandoubId];
+  m.paid += amount;
+  if (!state.payments[selectedMandoubId]) state.payments[selectedMandoubId] = [];
+  state.payments[selectedMandoubId].push({ amount, date: new Date().toLocaleDateString('ar-EG'), time: new Date().toLocaleTimeString('ar-EG') });
+  // Add to treasury
+  if (!state.treasury.log) state.treasury.log = [];
+  state.treasury.balance = (state.treasury.balance || 0) + amount;
+  state.treasury.log.unshift({ type: 'in', amount, desc: 'دفعة من ' + m.name, date: new Date().toLocaleDateString('ar-EG') });
+  await saveToFirebase();
+  closePayModal();
+  showToast('✅ تم تسجيل الدفعة');
+}
+
+async function confirmFire() {
+  if (!confirm('هتقيل المندوب ده؟')) return;
+  const m = state.mandoubs[selectedMandoubId];
+  m.active = false;
+  state.fired[selectedMandoubId] = { ...m, fireDate: new Date().toLocaleDateString('ar-EG') };
+  delete state.mandoubs[selectedMandoubId];
+  await saveToFirebase();
+  closePayModal();
+  showToast('🚫 تم إقالة المندوب');
+}
+
+// ==================== PAYMENTS TAB ====================
+function renderPaymentSelect() {
+  const sel = document.getElementById('paymentMandoubSelect');
+  const allM = { ...state.mandoubs, ...state.fired };
+  let opts = '<option value="">— اختر مندوب —</option>';
+  Object.values(allM).forEach(m => { opts += `<option value="${m.id}">${m.name}</option>`; });
+  sel.innerHTML = opts;
+}
+
+function showPaymentHistory() {
+  const id = document.getElementById('paymentMandoubSelect').value;
+  const container = document.getElementById('paymentHistoryContainer');
+  if (!id) { container.innerHTML = '<div class="empty-state">اختر مندوب أولاً</div>'; return; }
+  const payments = state.payments[id] || [];
+  const allM = { ...state.mandoubs, ...state.fired };
+  const m = allM[id];
+  if (!payments.length) { container.innerHTML = '<div class="empty-state">مفيش دفعات لهذا المندوب</div>'; return; }
+  let total = 0;
+  let html = `<div style="margin-bottom:12px;font-size:14px;font-weight:bold;color:#1a1a2e;">
+    ${m?.name} — إجمالي المديونية: ${m?.totalDebt||0} ج
+  </div>`;
+  payments.forEach((p, i) => {
+    total += p.amount;
+    html += `<div class="payment-item">
+      <div>
+        <div style="font-weight:bold;">${p.date}</div>
+        <div class="info">${p.time||''}</div>
+      </div>
+      <div class="amount">${p.amount} ج</div>
+    </div>`;
+  });
+  html += `<div style="text-align:center;padding:12px;background:#f0fff4;border-radius:8px;margin-top:8px;">
+    <strong>إجمالي المدفوع: ${total} ج</strong> — متبقي: ${(m?.totalDebt||0)-total} ج
+  </div>`;
+  container.innerHTML = html;
+}
+
+// ==================== TREASURY ====================
+async function addToTreasury() {
+  const amount = +document.getElementById('addAmount').value;
+  if (!amount || amount <= 0) { showToast('ادخل مبلغ'); return; }
+  if (!state.treasury.log) state.treasury.log = [];
+  state.treasury.balance = (state.treasury.balance || 0) + amount;
+  state.treasury.log.unshift({ type: 'add', amount, desc: 'إضافة للخزينة', date: new Date().toLocaleDateString('ar-EG') });
+  document.getElementById('addAmount').value = '';
+  await saveToFirebase();
+  showToast('✅ تم إضافة المبلغ');
+}
+
+async function clearTreasuryLog() {
+  if (!confirm('هتمسح سجل الخزينة؟')) return;
+  state.treasury.log = [];
+  await saveToFirebase();
+  showToast('تم مسح السجل');
+}
+
+function renderTreasury() {
+  const t = state.treasury;
+  const balance = t.balance || 0;
+  document.getElementById('treasuryBalance').textContent = balance + ' ج';
+  document.getElementById('treasuryWarning').style.display = balance <= 0 ? 'block' : 'none';
+  // Calc totals
+  const log = t.log || [];
+  const totalAdded = log.filter(l=>l.type==='add').reduce((s,l)=>s+l.amount,0);
+  const totalPaid = log.filter(l=>l.type==='in').reduce((s,l)=>s+l.amount,0);
+  document.getElementById('totalAdded').textContent = totalAdded + ' ج';
+  document.getElementById('totalPaid').textContent = totalPaid + ' ج';
+  const logEl = document.getElementById('treasuryLog');
+  if (!log.length) { logEl.innerHTML = '<div class="empty-state">مفيش حركات لسه</div>'; return; }
+  logEl.innerHTML = log.map(l => `<div class="treasury-item">
+    <div>
+      <div style="font-weight:bold;font-size:13px;">${l.desc}</div>
+      <div style="font-size:11px;color:#999;">${l.date}</div>
+    </div>
+    <div style="font-weight:bold;color:${l.type==='out'?'#FF6B00':'#2d6a4f'}">${l.type==='out'?'-':'+'} ${l.amount} ج</div>
+  </div>`).join('');
+}
+
+// ==================== CUSTODY ====================
+function updateCustodyStats() {
+  const jackets = state.custody.filter(c=>c.type==='jacket').reduce((s,c)=>s+c.qty,0);
+  const bags = state.custody.filter(c=>c.type==='bag').reduce((s,c)=>s+c.qty,0);
+  document.getElementById('custodyJackets').textContent = jackets;
+  document.getElementById('custodyBags').textContent = bags;
+}
+
+async function addCustody() {
+  const name = document.getElementById('custodyName').value.trim();
+  if (!name) { showToast('ادخل اسم المندوب'); return; }
+  const item = {
+    id: Date.now().toString(),
+    name, customId: document.getElementById('custodyId').value.trim(),
+    type: document.getElementById('custodyType').value,
+    qty: +document.getElementById('custodyQty').value,
+    date: new Date().toLocaleDateString('ar-EG')
+  };
+  if (!state.custody) state.custody = [];
+  state.custody.push(item);
+  document.getElementById('custodyName').value = '';
+  document.getElementById('custodyId').value = '';
+  await saveToFirebase();
+  showToast('✅ تم تسجيل العهدة');
+}
+
+function renderCustody() {
+  updateCustodyStats();
+  const list = document.getElementById('custodyList');
+  if (!state.custody || !state.custody.length) {
+    list.innerHTML = '<div class="empty-state">مفيش عهد مسجلة</div>'; return;
+  }
+  list.innerHTML = state.custody.map((c,i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#f8f9fa;border-radius:8px;margin-bottom:8px;">
+      <div>
+        <div style="font-weight:bold;">${c.name} ${c.customId?'#'+c.customId:''}</div>
+        <div style="font-size:12px;color:#666;">${c.type==='jacket'?'🧥 جاكيت':'🎒 باوتش'} · ${c.date}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px;font-weight:bold;">${c.qty}</span>
+        <button onclick="removeCustody(${i})" style="background:#FF6B00;color:white;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit;">حذف</button>
+      </div>
+    </div>`).join('');
+
+  // Totals
+  const totalDebt = Object.values(state.mandoubs).reduce((s,m)=>s+m.totalDebt,0);
+  const totalPaid = Object.values(state.mandoubs).reduce((s,m)=>s+m.paid,0);
+  list.innerHTML += `<div style="display:flex;justify-content:space-between;padding:12px;background:#fff5f5;border-radius:8px;margin-top:12px;">
+    <div><div style="font-size:12px;color:#666;">إجمالي المديونيات</div><div style="font-weight:bold;">${totalDebt} ج</div></div>
+    <div><div style="font-size:12px;color:#666;">المتبقي</div><div style="font-weight:bold;color:#FF6B00;">${totalDebt-totalPaid} ج</div></div>
+  </div>`;
+}
+
+async function removeCustody(idx) {
+  state.custody.splice(idx, 1);
+  await saveToFirebase();
+  showToast('تم الحذف');
+}
+
+// ==================== FIRED UNIFIED ====================
+let firedActiveTab = 'company';
+
+function switchFiredTab(tab) {
+  firedActiveTab = tab;
+  const btnC = document.getElementById('uf_tab_company');
+  const btnP = document.getElementById('uf_tab_port');
+  const panelC = document.getElementById('uf_panel_company');
+  const panelP = document.getElementById('uf_panel_port');
+  if (tab === 'company') {
+    btnC.style.background = 'white'; btnC.style.color = '#FF6B00'; btnC.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+    btnP.style.background = 'transparent'; btnP.style.color = '#666'; btnP.style.boxShadow = 'none';
+    panelC.style.display = 'block'; panelP.style.display = 'none';
+    renderFired();
+  } else {
+    btnP.style.background = 'white'; btnP.style.color = '#e63946'; btnP.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+    btnC.style.background = 'transparent'; btnC.style.color = '#666'; btnC.style.boxShadow = 'none';
+    panelP.style.display = 'block'; panelC.style.display = 'none';
+    renderPortFired();
+  }
+}
+
+function renderFiredUnified() {
+  // Update unified stats
+  const fired = Object.values(state.fired || {});
+  const portFired = state.portfired || [];
+  const companyDebt = fired.reduce((s,m) => s + (m.totalDebt - m.paid), 0);
+  const portDebt    = portFired.reduce((s,m) => s + (m.debt||0), 0);
+
+  document.getElementById('uf_company_count').textContent = fired.length;
+  document.getElementById('uf_port_count').textContent    = portFired.length;
+  document.getElementById('uf_company_debt').textContent  = companyDebt + ' ج';
+  document.getElementById('uf_port_debt').textContent     = portDebt + ' ج';
+  document.getElementById('uf_total_debt').textContent    = (companyDebt + portDebt) + ' ج';
+
+  // Render active sub-tab
+  if (firedActiveTab === 'company') renderFired();
+  else renderPortFired();
+}
+
+// ==================== FIRED ====================
+function renderFired() {
+  const firedEntries = Object.entries(state.fired || {});
+  const list = document.getElementById('firedList');
+  if (!list) return;
+  if (!firedEntries.length) { list.innerHTML = '<div class="empty-state">مفيش إقالات لسه</div>'; return; }
+  list.innerHTML = firedEntries.map(([key, m]) => {
+    const rem = m.totalDebt - m.paid;
+    return `<div class="fired-card">
+      <div class="mandoub-header">
+        <div class="mandoub-avatar" style="background:#6c757d;">${m.photo?`<img src="${m.photo}" />`:'🚫'}</div>
+        <div class="mandoub-info">
+          <div class="mandoub-name">${m.name}</div>
+          <div class="mandoub-details">تاريخ الإقالة: ${m.fireDate||'—'}</div>
+        </div>
+        <div style="text-align:left;">
+          <div style="font-weight:bold;font-size:16px;color:${rem>0?'#FF6B00':'#2d6a4f'}">${rem} ج</div>
+          <div style="font-size:11px;color:#999;">دفع ${m.paid} من ${m.totalDebt}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0;">
+        <button onclick="editFiredMandoub('${key}')" style="flex:1;padding:8px;background:#FF6B00;color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:bold;">✏️ تعديل</button>
+        <button onclick="deleteFiredMandoub('${key}')" style="flex:1;padding:8px;background:#e63946;color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:bold;">🗑 حذف</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editFiredMandoub(key) {
+  const m = state.fired[key];
+  if (!m) return;
+  const body = `
+    <div class="form-group"><label>اسم المندوب</label>
+      <input id="ef_name" value="${m.name||''}" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;"/>
+    </div>
+    <div class="form-group"><label>إجمالي المديونية</label>
+      <input type="number" id="ef_totalDebt" value="${m.totalDebt||0}" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;"/>
+    </div>
+    <div class="form-group"><label>المبلغ المدفوع</label>
+      <input type="number" id="ef_paid" value="${m.paid||0}" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;"/>
+    </div>
+    <div class="form-group"><label>تاريخ الإقالة</label>
+      <input id="ef_fireDate" value="${m.fireDate||''}" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;" placeholder="مثال: 1/6/2025"/>
+    </div>
+  `;
+  openEditModal('✏️ تعديل بيانات المقال', body, async () => {
+    state.fired[key].name      = document.getElementById('ef_name').value.trim() || m.name;
+    state.fired[key].totalDebt = +document.getElementById('ef_totalDebt').value || 0;
+    state.fired[key].paid      = +document.getElementById('ef_paid').value || 0;
+    state.fired[key].fireDate  = document.getElementById('ef_fireDate').value.trim();
+    await saveToFirebase();
+    showToast('✅ تم التعديل');
+    renderFiredUnified();
+  });
+}
+
+async function deleteFiredMandoub(key) {
+  const m = state.fired[key];
+  if (!confirm(`هتحذف "${m?.name}" من الإقالات؟`)) return;
+  delete state.fired[key];
+  await saveToFirebase();
+  showToast('🗑 تم الحذف');
+  renderFiredUnified();
+}
+
+// ==================== TOTALS ====================
+function renderTotals() {
+  const mandoubs = Object.values(state.mandoubs);
+  const totalDebt = mandoubs.reduce((s,m)=>s+m.totalDebt,0);
+  const totalPaid = mandoubs.reduce((s,m)=>s+m.paid,0);
+  const totalRem = totalDebt - totalPaid;
+  const html = `
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num">${mandoubs.length}</div><div class="stat-label">المناديب النشطين</div></div>
+      <div class="stat-card"><div class="stat-num">${totalDebt} ج</div><div class="stat-label">إجمالي المديونيات</div></div>
+      <div class="stat-card"><div class="stat-num">${totalPaid} ج</div><div class="stat-label">إجمالي المدفوع</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#FF6B00">${totalRem} ج</div><div class="stat-label">المتبقي</div></div>
+    </div>
+    <div class="card">
+      <h3>📊 تفاصيل كل مندوب</h3>
+      ${mandoubs.length ? mandoubs.sort((a,b)=>(b.totalDebt-b.paid)-(a.totalDebt-a.paid)).map(m=>{
+        const rem = m.totalDebt - m.paid;
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #f0f2f5;">
+          <div>
+            <div style="font-weight:bold;">${m.name}</div>
+            <div style="font-size:12px;color:#666;">دفع ${m.paid} من ${m.totalDebt} ج</div>
+          </div>
+          <div style="font-weight:bold;color:${rem>0?'#FF6B00':'#2d6a4f'}">${rem} ج</div>
+        </div>`;
+      }).join('') : '<div class="empty-state">مفيش بيانات</div>'}
+    </div>`;
+  document.getElementById('totalsList').innerHTML = html;
+}
+
+// ==================== INVENTORY ====================
+const invNames = { tshirt: 'تيشرت', bag_bike: 'باوتش عجلة', bag_car: 'باوتش مكنة', security: 'استعلام أمني' };
+const invPrices = { tshirt: 150, bag_bike: 450, bag_car: 550, security: 100 };
+
+async function addInventory() {
+  const [key, price] = document.getElementById('invItem').value.split(':');
+  const qty = +document.getElementById('invQty').value;
+  if (!qty) return;
+  if (!state.inventory) state.inventory = { tshirt:0, bag_bike:0, bag_car:0, security:0, log:[] };
+  state.inventory[key] = (state.inventory[key]||0) + qty;
+  if (!state.inventory.log) state.inventory.log = [];
+  state.inventory.log.unshift({ item: invNames[key], qty, date: new Date().toLocaleDateString('ar-EG'), type: 'in' });
+  await saveToFirebase();
+  showToast('✅ تم إضافة المخزون');
+}
+
+function renderInventory() {
+  const inv = state.inventory || {};
+  const items = ['tshirt','bag_bike','bag_car','security'];
+  const totalVal = items.reduce((s,k)=>s+(inv[k]||0)*invPrices[k],0);
+  const totalItems = items.reduce((s,k)=>s+(inv[k]||0),0);
+  let html = `<div style="display:flex;justify-content:space-between;padding:12px;background:#f0fff4;border-radius:8px;margin-bottom:12px;">
+    <div><div style="font-size:12px;color:#666;">قيمة المخزون</div><div style="font-weight:bold;color:#2d6a4f;">${totalVal} ج</div></div>
+    <div><div style="font-size:12px;color:#666;">إجمالي الأصناف</div><div style="font-weight:bold;">${totalItems}</div></div>
+  </div>`;
+  items.forEach(k => {
+    html += `<div class="inv-item">
+      <div><div style="font-weight:bold;">${invNames[k]}</div><div style="font-size:12px;color:#666;">${invPrices[k]} ج للوحدة</div></div>
+      <div class="inv-count">${inv[k]||0}</div>
+    </div>`;
+  });
+  document.getElementById('inventoryDisplay').innerHTML = html;
+  const log = inv.log || [];
+  const logEl = document.getElementById('inventoryLog');
+  logEl.innerHTML = log.length ? log.map(l=>`<div class="treasury-item">
+    <div><div style="font-weight:bold;font-size:13px;">${l.item}</div><div style="font-size:11px;color:#999;">${l.date}</div></div>
+    <div style="font-weight:bold;color:#2d6a4f;">+${l.qty}</div>
+  </div>`).join('') : '<div class="empty-state">مفيش حركات</div>';
+}
+
+// ==================== ASSIGNMENTS ====================
+function extractAssignment() {
+  const msg = document.getElementById('assignMsg').value;
+  const phoneMatch = msg.match(/01[0-9]{9}/);
+  const lines = msg.split('\n').filter(l=>l.trim());
+  let name = '';
+  for (const line of lines) {
+    if (line.includes('الاسم') || line.includes('اسم')) {
+      name = line.split(/[:：]/)[1]?.trim() || '';
+      break;
+    }
+  }
+  if (!name && lines.length > 0) name = lines[0].replace(/[0-9]/g,'').trim().substring(0,30);
+  if (phoneMatch) document.getElementById('assignPhone').value = phoneMatch[0];
+  if (name) document.getElementById('assignName').value = name;
+  showToast('تم الاستخراج');
+}
+
+async function saveAssignment() {
+  const name = document.getElementById('assignName').value.trim();
+  const phone = document.getElementById('assignPhone').value.trim();
+  if (!name) { showToast('ادخل اسم الطيار'); return; }
+  if (!state.assignments) state.assignments = [];
+  state.assignments.unshift({
+    id: Date.now().toString(), name, phone,
+    type: document.getElementById('assignType').value,
+    notes: document.getElementById('assignNotes').value.trim(),
+    date: new Date().toLocaleDateString('ar-EG')
+  });
+  document.getElementById('assignName').value = '';
+  document.getElementById('assignPhone').value = '';
+  document.getElementById('assignMsg').value = '';
+  document.getElementById('assignNotes').value = '';
+  await saveToFirebase();
+  showToast('✅ تم حفظ التعيين');
+}
+
+function renderAssignments() {
+  const list = document.getElementById('assignmentsList');
+  const assigns = state.assignments || [];
+  if (!assigns.length) { list.innerHTML = '<div class="empty-state">مفيش تعيينات لسه</div>'; return; }
+  list.innerHTML = assigns.map((a,i)=>`<div class="assign-card">
+    <div style="display:flex;justify-content:space-between;align-items:start;">
+      <div>
+        <div style="font-weight:bold;">${a.name}</div>
+        <div style="font-size:12px;color:#666;margin-top:3px;">${a.type} · ${a.date}</div>
+        ${a.notes?`<div style="font-size:12px;color:#888;margin-top:2px;">${a.notes}</div>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        ${a.phone?`<a href="https://wa.me/2${a.phone}" target="_blank" class="assign-phone">📱 ${a.phone}</a>`:''}
+        <button onclick="deleteAssignment(${i})" style="background:#FF6B00;color:white;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit;font-size:12px;">حذف</button>
+      </div>
+    </div>
+  </div>`).join('');
+}
+
+async function deleteAssignment(i) {
+  state.assignments.splice(i, 1);
+  await saveToFirebase();
+  showToast('تم الحذف');
+}
+
+// ==================== DEBT SUMMARY ====================
+function renderDebtSummary() {
+  // --- المناديب الشغّالين ---
+  const active = Object.values(state.mandoubs || {});
+  let activeTotal = 0;
+  active.forEach(m => { activeTotal += Math.max(0, (m.totalDebt||0) - (m.paid||0)); });
+  document.getElementById('ds_activeTotal').textContent = activeTotal + ' ج';
+
+  const activeList = document.getElementById('ds_activeList');
+  if (!active.length) {
+    activeList.innerHTML = '<div class="empty-state">مفيش مناديب</div>';
+  } else {
+    activeList.innerHTML = active.sort((a,b)=>{
+      const ra = (a.totalDebt||0)-(a.paid||0);
+      const rb = (b.totalDebt||0)-(b.paid||0);
+      return rb - ra;
+    }).map(m => {
+      const rem = (m.totalDebt||0) - (m.paid||0);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#f8f9fa;border-radius:8px;margin-bottom:8px;border-right:3px solid ${rem<=0?'#2d6a4f':'#FF6B00'};">
+        <div>
+          <div style="font-weight:bold;">${m.name} ${m.customId?'<span style="font-size:11px;color:#999;">#'+m.customId+'</span>':''}</div>
+          <div style="font-size:12px;color:#666;">مديون: ${m.totalDebt||0} ج · دفع: ${m.paid||0} ج</div>
+        </div>
+        <div style="font-weight:bold;font-size:16px;color:${rem<=0?'#2d6a4f':'#e63946'}">${rem<=0?'✅ خلّص':rem+' ج'}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // --- المقالين ---
+  const fired = Object.values(state.fired || {});
+  let firedTotal = 0;
+  fired.forEach(m => { firedTotal += Math.max(0, (m.totalDebt||0) - (m.paid||0)); });
+  document.getElementById('ds_firedTotal').textContent = firedTotal + ' ج';
+
+  const firedList = document.getElementById('ds_firedList');
+  if (!fired.length) {
+    firedList.innerHTML = '<div class="empty-state">مفيش مقالين</div>';
+  } else {
+    firedList.innerHTML = fired.sort((a,b)=>{
+      const ra = (a.totalDebt||0)-(a.paid||0);
+      const rb = (b.totalDebt||0)-(b.paid||0);
+      return rb - ra;
+    }).map(m => {
+      const rem = (m.totalDebt||0) - (m.paid||0);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#f8f9fa;border-radius:8px;margin-bottom:8px;border-right:3px solid ${rem<=0?'#2d6a4f':'#6c757d'};">
+        <div>
+          <div style="font-weight:bold;">${m.name}</div>
+          <div style="font-size:12px;color:#666;">تاريخ الإقالة: ${m.fireDate||'—'} · دفع: ${m.paid||0} ج</div>
+        </div>
+        <div style="font-weight:bold;font-size:16px;color:${rem<=0?'#2d6a4f':'#e63946'}">${rem<=0?'✅ خلّص':rem+' ج'}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // --- الإجمالي الكلي ---
+  document.getElementById('ds_grandTotal').textContent = (activeTotal + firedTotal) + ' ج';
+}
+
+// ==================== OFFICE POWER ====================
+async function addOfficePower() {
+  const name  = document.getElementById('op_name').value.trim();
+  const id    = document.getElementById('op_id').value.trim();
+  const phone = document.getElementById('op_phone').value.trim();
+  const type  = document.getElementById('op_type').value;
+  const notes = document.getElementById('op_notes').value.trim();
+  if (!name) { showToast('⚠️ اكتب اسم المندوب'); return; }
+  if (!state.officepower) state.officepower = [];
+  state.officepower.push({
+    name, customId: id, phone, type, notes,
+    date: new Date().toLocaleDateString('ar-EG')
+  });
+  await saveToFirebase();
+  showToast('✅ تم الإضافة');
+  document.getElementById('op_name').value = '';
+  document.getElementById('op_id').value = '';
+  document.getElementById('op_phone').value = '';
+  document.getElementById('op_notes').value = '';
+  renderOfficePower();
+}
+
+function renderOfficePower() {
+  const list = state.officepower || [];
+  const search = (document.getElementById('op_search')?.value || '').toLowerCase();
+  const filtered = list.filter(m =>
+    m.name.toLowerCase().includes(search) ||
+    (m.customId||'').toLowerCase().includes(search)
+  );
+
+  // Stats
+  document.getElementById('op_count').textContent = list.length;
+  const types = [...new Set(list.map(m=>m.type))].join(' · ') || '—';
+  document.getElementById('op_types').textContent = types;
+
+  const el = document.getElementById('op_list');
+  if (!filtered.length) { el.innerHTML = '<div class="empty-state">مفيش مناديب مسجّلين</div>'; return; }
+
+  el.innerHTML = filtered.map((m,i) => `
+    <div style="background:#f8f9fa;border-radius:10px;padding:14px;margin-bottom:10px;border-right:4px solid #FF6B00;">
+      <div style="display:flex;justify-content:space-between;align-items:start;">
+        <div>
+          <div style="font-weight:bold;font-size:15px;">${m.name} ${m.customId?'<span style="font-size:11px;color:#999;">#'+m.customId+'</span>':''}</div>
+          <div style="font-size:12px;color:#666;margin-top:3px;">
+            ${m.type} ${m.phone?'· 📱 '+m.phone:''} · ${m.date}
+          </div>
+          ${m.notes?`<div style="font-size:12px;color:#888;margin-top:2px;">📝 ${m.notes}</div>`:''}
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="editOfficePower(${list.indexOf(m)})" style="background:#FF6B00;color:white;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;">✏️</button>
+          <button onclick="deleteOfficePower(${list.indexOf(m)})" style="background:#e63946;color:white;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;">🗑</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function editOfficePower(i) {
+  const m = state.officepower[i];
+  const types = ['موتوسيكل','عجلة','مكنة'];
+  const body = `
+    <div class="form-group"><label>الاسم</label><input id="eOP_name" value="${m.name||''}" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;"/></div>
+    <div class="form-group"><label>ID</label><input id="eOP_id" value="${m.customId||''}" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;"/></div>
+    <div class="form-group"><label>موبايل</label><input id="eOP_phone" value="${m.phone||''}" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;"/></div>
+    <div class="form-group"><label>النوع</label>
+      <select id="eOP_type" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;">
+        ${types.map(t=>`<option value="${t}" ${m.type===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>ملاحظات</label><input id="eOP_notes" value="${m.notes||''}" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;"/></div>
+  `;
+  openEditModal('✏️ تعديل بيانات المندوب', body, async () => {
+    state.officepower[i].name     = document.getElementById('eOP_name').value.trim() || m.name;
+    state.officepower[i].customId = document.getElementById('eOP_id').value.trim();
+    state.officepower[i].phone    = document.getElementById('eOP_phone').value.trim();
+    state.officepower[i].type     = document.getElementById('eOP_type').value;
+    state.officepower[i].notes    = document.getElementById('eOP_notes').value.trim();
+    await saveToFirebase();
+    showToast('✅ تم التعديل');
+    renderOfficePower();
+  });
+}
+
+async function deleteOfficePower(i) {
+  if (!confirm('هتحذف المندوب ده من قوة المكتب؟')) return;
+  state.officepower.splice(i, 1);
+  await saveToFirebase();
+  showToast('🗑 تم الحذف');
+  renderOfficePower();
+}
+
+// ==================== AGENT STRENGTH ====================
+let asCurrentFilter = 'الكل';
+
+const AS_CFG = {
+  'قوي':  { border:'#2d6a4f', bg:'#f0fff4', badgeStyle:'background:#d4edda;color:#155724', icon:'💪', btnBg:'#d4edda', btnBorder:'#2d6a4f', btnColor:'#155724' },
+  'جيد':  { border:'#f4a261', bg:'#fffbf0', badgeStyle:'background:#fff3cd;color:#856404', icon:'👍', btnBg:'#fff3cd', btnBorder:'#f4a261', btnColor:'#856404' },
+  'ضعيف': { border:'#e63946', bg:'#fff5f5', badgeStyle:'background:#f8d7da;color:#721c24', icon:'👎', btnBg:'#f8d7da', btnBorder:'#e63946', btnColor:'#721c24' }
+};
+
+function selectAgentStrength(val) {
+  document.getElementById('as_strength_val').value = val;
+  ['قوي','جيد','ضعيف'].forEach(k => {
+    const btnId = k==='قوي'?'as_btn_strong':k==='جيد'?'as_btn_good':'as_btn_weak';
+    const btn = document.getElementById(btnId);
+    if (k === val) {
+      btn.style.background  = AS_CFG[k].btnBg;
+      btn.style.borderColor = AS_CFG[k].btnBorder;
+      btn.style.color       = AS_CFG[k].btnColor;
+    } else {
+      btn.style.background = 'white'; btn.style.borderColor = '#e0e0e0'; btn.style.color = '#222';
+    }
+  });
+}
+
+async function addAgentStrength() {
+  const name = document.getElementById('as_name').value.trim();
+  const id   = document.getElementById('as_id').value.trim();
+  const str  = document.getElementById('as_strength_val').value;
+  if (!name) { showToast('⚠️ اكتب اسم المندوب'); return; }
+  if (!str)  { showToast('⚠️ اختر تصنيف القوة'); return; }
+  if (!state.agentstrength) state.agentstrength = [];
+  state.agentstrength.push({
+    name, customId: id, strength: str, status: 'شغّال',
+    date: new Date().toLocaleDateString('ar-EG'), fireDate: ''
+  });
+  await saveToFirebase();
+  showToast('✅ تم الإضافة');
+  document.getElementById('as_name').value = '';
+  document.getElementById('as_id').value = '';
+  document.getElementById('as_strength_val').value = '';
+  ['as_btn_strong','as_btn_good','as_btn_weak'].forEach(bid => {
+    const b = document.getElementById(bid);
+    b.style.background='white'; b.style.borderColor='#e0e0e0'; b.style.color='#222';
+  });
+  renderAgentStrength();
+}
+
+async function toggleAgentFired(i) {
+  const m = state.agentstrength[i];
+  if (m.status === 'شغّال') {
+    if (!confirm(`هتسجّل إقالة للمندوب "${m.name}"؟`)) return;
+    state.agentstrength[i].status   = 'مقال';
+    state.agentstrength[i].fireDate = new Date().toLocaleDateString('ar-EG');
+    showToast('🚫 تم تسجيل الإقالة');
+  } else {
+    if (!confirm(`هترجّع "${m.name}" للشغل؟`)) return;
+    state.agentstrength[i].status   = 'شغّال';
+    state.agentstrength[i].fireDate = '';
+    showToast('✅ تم إرجاع المندوب للشغل');
+  }
+  await saveToFirebase();
+  renderAgentStrength();
+}
+
+function filterAgentStrength(filter, btn) {
+  asCurrentFilter = filter;
+  document.querySelectorAll('#sec-agentstrength .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAgentStrength();
+}
+
+function renderAgentStrength() {
+  const list = state.agentstrength || [];
+  const search      = (document.getElementById('as_search')?.value      || '').toLowerCase();
+  const searchFired = (document.getElementById('as_search_fired')?.value || '').toLowerCase();
+
+  const working = list.filter(m => (m.status||'شغّال') === 'شغّال');
+  const fired   = list.filter(m => (m.status||'شغّال') === 'مقال');
+
+  // Stats
+  document.getElementById('as_working').textContent    = working.length;
+  document.getElementById('as_fired_count').textContent= fired.length;
+  document.getElementById('as_strong').textContent     = working.filter(m=>m.strength==='قوي').length;
+  document.getElementById('as_good').textContent       = working.filter(m=>m.strength==='جيد').length;
+  document.getElementById('as_weak').textContent       = working.filter(m=>m.strength==='ضعيف').length;
+  document.getElementById('as_working_label').textContent = working.length ? '('+working.length+' طيار)' : '';
+  document.getElementById('as_fired_label').textContent   = fired.length   ? '('+fired.length+')'        : '';
+
+  // --- جدول الشغّالين ---
+  const filteredWorking = working.filter(m => {
+    const matchFilter = asCurrentFilter==='الكل' || m.strength===asCurrentFilter;
+    const matchSearch = m.name.toLowerCase().includes(search) || (m.customId||'').toLowerCase().includes(search);
+    return matchFilter && matchSearch;
+  });
+
+  const tbody = document.getElementById('as_list');
+  const emptyW = document.getElementById('as_empty_working');
+  if (!filteredWorking.length) {
+    tbody.innerHTML = '';
+    emptyW.style.display = 'block';
+  } else {
+    emptyW.style.display = 'none';
+    let rowNum = 1;
+    tbody.innerHTML = filteredWorking.map(m => {
+      const realIdx = list.indexOf(m);
+      const c = AS_CFG[m.strength] || AS_CFG['جيد'];
+      return `<tr style="border-bottom:1px solid #f0f0f0;transition:background 0.15s;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
+        <td style="padding:10px 12px;color:#999;font-size:12px;">${rowNum++}</td>
+        <td style="padding:10px 12px;font-weight:bold;">${m.name}</td>
+        <td style="padding:10px 12px;color:#666;">${m.customId||'—'}</td>
+        <td style="padding:10px 12px;">
+          <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:bold;${c.badgeStyle}">${c.icon} ${m.strength}</span>
+        </td>
+        <td style="padding:10px 12px;font-size:12px;color:#666;">${m.date||'—'}</td>
+        <td style="padding:10px 12px;">
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <button onclick="editAgentStrength(${realIdx})" style="background:#FF6B00;color:white;border:none;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;">✏️ تعديل</button>
+            <button onclick="toggleAgentFired(${realIdx})" style="background:#e63946;color:white;border:none;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;">🚫 إقالة</button>
+            <button onclick="deleteAgentStrength(${realIdx})" style="background:#6c757d;color:white;border:none;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;">🗑</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // --- جدول المقالين ---
+  const filteredFired = fired.filter(m =>
+    m.name.toLowerCase().includes(searchFired) || (m.customId||'').toLowerCase().includes(searchFired)
+  );
+
+  const tbodyF  = document.getElementById('as_list_fired');
+  const emptyF  = document.getElementById('as_empty_fired');
+  if (!filteredFired.length) {
+    tbodyF.innerHTML = '';
+    emptyF.style.display = 'block';
+  } else {
+    emptyF.style.display = 'none';
+    let rowNum = 1;
+    tbodyF.innerHTML = filteredFired.map(m => {
+      const realIdx = list.indexOf(m);
+      const c = AS_CFG[m.strength] || AS_CFG['جيد'];
+      return `<tr style="border-bottom:1px solid #f0f0f0;background:#fff5f5;transition:background 0.15s;" onmouseover="this.style.background='#ffe8e8'" onmouseout="this.style.background='#fff5f5'">
+        <td style="padding:10px 12px;color:#999;font-size:12px;">${rowNum++}</td>
+        <td style="padding:10px 12px;font-weight:bold;color:#c0392b;">${m.name}</td>
+        <td style="padding:10px 12px;color:#666;">${m.customId||'—'}</td>
+        <td style="padding:10px 12px;">
+          <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:bold;${c.badgeStyle}">${c.icon} ${m.strength}</span>
+        </td>
+        <td style="padding:10px 12px;font-size:12px;color:#e63946;font-weight:bold;">${m.fireDate||'—'}</td>
+        <td style="padding:10px 12px;">
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <button onclick="toggleAgentFired(${realIdx})" style="background:#2d6a4f;color:white;border:none;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;">↩️ إرجاع</button>
+            <button onclick="deleteAgentStrength(${realIdx})" style="background:#6c757d;color:white;border:none;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;">🗑</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function editAgentStrength(i) {
+  const m = state.agentstrength[i];
+  const strengths = ['قوي','جيد','ضعيف'];
+  const body = `
+    <div class="form-group"><label>الاسم</label><input id="eAS_name" value="${m.name||''}" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;"/></div>
+    <div class="form-group"><label>ID</label><input id="eAS_id" value="${m.customId||''}" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;"/></div>
+    <div class="form-group"><label>تصنيف القوة</label>
+      <select id="eAS_strength" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;">
+        ${strengths.map(s=>`<option value="${s}" ${m.strength===s?'selected':''}>${s==='قوي'?'💪':s==='جيد'?'👍':'👎'} مندوب ${s}</option>`).join('')}
+      </select>
+    </div>
+  `;
+  openEditModal('✏️ تعديل بيانات المندوب', body, async () => {
+    state.agentstrength[i].name     = document.getElementById('eAS_name').value.trim() || m.name;
+    state.agentstrength[i].customId = document.getElementById('eAS_id').value.trim();
+    state.agentstrength[i].strength = document.getElementById('eAS_strength').value;
+    await saveToFirebase();
+    showToast('✅ تم التعديل');
+    renderAgentStrength();
+  });
+}
+
+async function deleteAgentStrength(i) {
+  if (!confirm('هتحذف المندوب ده؟')) return;
+  state.agentstrength.splice(i, 1);
+  await saveToFirebase();
+  showToast('🗑 تم الحذف');
+  renderAgentStrength();
+}
+
+// ==================== RESERVATIONS ====================
+let rvCurrentFilter = 'all';
+let rvUnsubscribe = null;
+
+function rvGetDate() {
+  const el = document.getElementById('rv_date');
+  if (!el) return '';
+  if (!el.value) el.value = new Date().toISOString().split('T')[0];
+  return el.value;
+}
+
+function rvSetFilter(f, btn) {
+  rvCurrentFilter = f;
+  document.querySelectorAll('#sec-reservations .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReservations();
+}
+
+// حفظ حجز مندوب واحد في المسار المشترك
+async function setReservation(agentKey, status) {
+  const date = rvGetDate();
+  if (!date) return;
+  const db  = window.db;
+  const ref = window.dbRef;
+  const set = window.dbSet;
+  try {
+    const path = `shared/reservations/${date}/${agentKey}`;
+    await set(ref(db, path), status === '' ? null : status);
+  } catch(e) { showToast('خطأ في الحفظ: ' + e.message); }
+}
+
+// تعيين حالة للكل دفعة واحدة
+async function setAllReservation(status) {
+  const date = rvGetDate();
+  if (!date) return;
+  const db     = window.db;
+  const ref    = window.dbRef;
+  const set    = window.dbSet;
+  const agents = state.agentstrength.filter(a => (a.status||'شغّال') === 'شغّال');
+  try {
+    for (const a of agents) {
+      const key  = a.name + '_' + (a.customId||'');
+      const path = `shared/reservations/${date}/${key}`;
+      await set(ref(db, path), status === '' ? null : status);
+    }
+  } catch(e) { showToast('خطأ في الحفظ: ' + e.message); }
+}
+
+// مستمع مباشر على التاريخ المختار
+function listenToReservationsDate(date) {
+  if (!date) return;
+  const db      = window.db;
+  const ref     = window.dbRef;
+  const onValue = window.dbOnValue;
+  if (rvUnsubscribe) { rvUnsubscribe(); rvUnsubscribe = null; }
+  rvUnsubscribe = onValue(ref(db, `shared/reservations/${date}`), (snap) => {
+    state.reservations = state.reservations || {};
+    state.reservations[date] = snap.val() || {};
+    renderReservations();
+  });
+}
+
+function renderReservations() {
+  const date = rvGetDate();
+  const dateData = (state.reservations && state.reservations[date]) || {};
+  const agents = state.agentstrength.filter(a => (a.status||'شغّال') === 'شغّال');
+
+  // إحصائيات
+  let booked=0, absent=0, leave=0, none=0;
+  agents.forEach(a => {
+    const key = a.name + '_' + (a.customId||'');
+    const s = dateData[key] || '';
+    if (s==='حاجز') booked++;
+    else if (s==='غياب') absent++;
+    else if (s==='إجازة') leave++;
+    else none++;
+  });
+  const el_b = document.getElementById('rv_booked'); if(el_b) el_b.textContent = booked;
+  const el_a = document.getElementById('rv_absent'); if(el_a) el_a.textContent = absent;
+  const el_l = document.getElementById('rv_leave');  if(el_l) el_l.textContent = leave;
+  const el_n = document.getElementById('rv_none');   if(el_n) el_n.textContent = none;
+
+  const el = document.getElementById('rv_list');
+  if (!el) return;
+
+  if (!agents.length) {
+    el.innerHTML = '<div class="empty-state">مفيش مناديب في قوة المناديب لسه.<br>أضف مناديب في تاب 🏆 قوة المناديب أولاً.</div>';
+    return;
+  }
+
+  // فلتر
+  let filtered = agents;
+  if (rvCurrentFilter !== 'all') {
+    filtered = agents.filter(a => {
+      const key = a.name + '_' + (a.customId||'');
+      const s = dateData[key] || '';
+      return rvCurrentFilter === '' ? s === '' : s === rvCurrentFilter;
+    });
+  }
+
+  if (!filtered.length) { el.innerHTML = '<div class="empty-state">مفيش مناديب في هذا التصنيف</div>'; return; }
+
+  const statusCfg = {
+    'حاجز':  { bg:'#f0fff4', border:'#2d6a4f', badge:'background:#d4edda;color:#155724', icon:'✅' },
+    'غياب':  { bg:'#fff5f5', border:'#e63946', badge:'background:#f8d7da;color:#721c24', icon:'❌' },
+    'إجازة': { bg:'#fff8f0', border:'#f4a261', badge:'background:#fff3cd;color:#856404', icon:'🌴' },
+    '':       { bg:'#f8f9fa', border:'#dee2e6', badge:'background:#e9ecef;color:#495057', icon:'⏳' }
+  };
+  const strCfg = { 'قوي':'💪', 'جيد':'👍', 'ضعيف':'👎' };
+
+  el.innerHTML = filtered.map(a => {
+    const key    = a.name + '_' + (a.customId||'');
+    const status = dateData[key] || '';
+    const cfg    = statusCfg[status] || statusCfg[''];
+    const ek     = key.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+
+    return `<div style="background:${cfg.bg};border-radius:10px;padding:13px 15px;margin-bottom:10px;border-right:4px solid ${cfg.border};display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:120px;">
+        <div style="font-weight:bold;font-size:14px;">${a.name}${a.customId?` <span style="font-size:11px;color:#999;">#${a.customId}</span>`:''}</div>
+        <div style="margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:11px;color:#666;">${strCfg[a.strength]||''} ${a.strength}</span>
+          <span style="display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:bold;${cfg.badge}">${cfg.icon} ${status||'لم يُحدَّد'}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button onclick="setReservation('${ek}','حاجز')"  style="padding:7px 12px;border:2px solid ${status==='حاجز'?'#2d6a4f':'#dee2e6'};background:${status==='حاجز'?'#2d6a4f':'white'};color:${status==='حاجز'?'white':'#333'};border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:bold;">✅ حاجز</button>
+        <button onclick="setReservation('${ek}','غياب')"  style="padding:7px 12px;border:2px solid ${status==='غياب'?'#e63946':'#dee2e6'};background:${status==='غياب'?'#e63946':'white'};color:${status==='غياب'?'white':'#333'};border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:bold;">❌ غياب</button>
+        <button onclick="setReservation('${ek}','إجازة')" style="padding:7px 12px;border:2px solid ${status==='إجازة'?'#f4a261':'#dee2e6'};background:${status==='إجازة'?'#f4a261':'white'};color:${status==='إجازة'?'white':'#333'};border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:bold;">🌴 إجازة</button>
+        <button onclick="setReservation('${ek}','')" style="padding:7px 10px;border:2px solid #dee2e6;background:white;color:#999;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ==================== PORT FIRED ====================
+let pfCurrentFilter = 'all';
+
+function pfSetFilter(f, btn) {
+  pfCurrentFilter = f;
+  document.querySelectorAll('#uf_panel_port .filter-btn').forEach(b => b.classList.remove('active'));
+  // highlight the matching filter button
+  const map = { all:'pf_f_all', debt:'pf_f_debt', clear:'pf_f_clear' };
+  const target = document.getElementById(map[f]);
+  if (target) target.classList.add('active');
+  // also highlight the stat card when debt filter active
+  const card = document.getElementById('pf_debt_card');
+  if (card) card.style.outline = f==='debt' ? '3px solid white' : 'none';
+  renderPortFired();
+}
+
+async function addPortFired() {
+  const name   = document.getElementById('pf_name').value.trim();
+  const id     = document.getElementById('pf_id').value.trim();
+  const debt   = +document.getElementById('pf_debt').value || 0;
+  const date   = document.getElementById('pf_date').value || new Date().toLocaleDateString('ar-EG');
+  const reason = document.getElementById('pf_reason').value;
+  const notes  = document.getElementById('pf_notes').value.trim();
+  if (!name) { showToast('⚠️ اكتب اسم المندوب'); return; }
+  if (!state.portfired) state.portfired = [];
+  state.portfired.push({ name, customId: id, debt, date, reason, notes, regDate: new Date().toLocaleDateString('ar-EG') });
+  await saveToFirebase();
+  showToast('✅ تم التسجيل');
+  document.getElementById('pf_name').value = '';
+  document.getElementById('pf_id').value = '';
+  document.getElementById('pf_debt').value = '';
+  document.getElementById('pf_notes').value = '';
+  renderPortFired();
+}
+
+function renderPortFired() {
+  const list = state.portfired || [];
+  const search = (document.getElementById('pf_search')?.value || '').toLowerCase();
+
+  // Stats — update unified header if elements exist
+  const totalDebt = list.reduce((s,m) => s + (m.debt||0), 0);
+  const debtCount = list.filter(m => (m.debt||0) > 0).length;
+  const elCount    = document.getElementById('pf_count');     if (elCount)    elCount.textContent    = list.length;
+  const elDebtT    = document.getElementById('pf_debtTotal'); if (elDebtT)    elDebtT.textContent    = totalDebt + ' ج';
+  const elDebtC    = document.getElementById('pf_debtCount'); if (elDebtC)    elDebtC.textContent    = debtCount;
+  // also update the unified fired stats
+  const elPortD    = document.getElementById('uf_port_debt');  if (elPortD)   elPortD.textContent    = totalDebt + ' ج';
+  const elPortCnt  = document.getElementById('uf_port_count'); if (elPortCnt) elPortCnt.textContent  = list.length;
+
+  // Filter by debt status
+  let base = list;
+  if (pfCurrentFilter === 'debt')  base = list.filter(m => (m.debt||0) > 0);
+  if (pfCurrentFilter === 'clear') base = list.filter(m => (m.debt||0) <= 0);
+
+  const filtered = base.filter(m =>
+    m.name.toLowerCase().includes(search) ||
+    (m.customId||'').toLowerCase().includes(search) ||
+    (m.reason||'').toLowerCase().includes(search)
+  );
+
+  const el = document.getElementById('pf_list');
+  if (!filtered.length) { el.innerHTML = '<div class="empty-state">مفيش إقالات في هذا التصنيف</div>'; return; }
+
+  el.innerHTML = filtered.map((m) => {
+    const realIdx = list.indexOf(m);
+    const hasDebt = (m.debt||0) > 0;
+    const borderColor = hasDebt ? '#e63946' : '#2d6a4f';
+    const bgColor     = hasDebt ? '#fff5f5' : '#f0fff4';
+    return `
+    <div style="background:${bgColor};border-radius:10px;padding:14px;margin-bottom:10px;border-right:4px solid ${borderColor};">
+      <div style="display:flex;justify-content:space-between;align-items:start;">
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span style="font-weight:bold;font-size:15px;">${m.name}</span>
+            ${m.customId?`<span style="background:#FF6B00;color:white;border-radius:4px;padding:1px 7px;font-size:11px;">#${m.customId}</span>`:''}
+            <span style="background:#e63946;color:white;border-radius:4px;padding:1px 7px;font-size:11px;">${m.reason}</span>
+            ${hasDebt
+              ? `<span style="background:#e63946;color:white;border-radius:4px;padding:1px 7px;font-size:11px;font-weight:bold;">💸 مديونية</span>`
+              : `<span style="background:#2d6a4f;color:white;border-radius:4px;padding:1px 7px;font-size:11px;">✅ نظيف</span>`
+            }
+          </div>
+          <div style="font-size:12px;color:#666;margin-top:5px;">📅 ${m.date}</div>
+          ${hasDebt
+            ? `<div style="font-size:14px;color:#e63946;font-weight:bold;margin-top:4px;background:white;padding:5px 10px;border-radius:6px;display:inline-block;">💸 المديونية: ${m.debt} ج</div>`
+            : `<div style="font-size:12px;color:#2d6a4f;margin-top:3px;">✅ بدون مديونية</div>`
+          }
+          ${m.notes?`<div style="font-size:12px;color:#555;margin-top:4px;background:white;padding:6px 8px;border-radius:6px;">📝 ${m.notes}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-right:8px;">
+          <button onclick="editPortFired(${realIdx})" style="background:#FF6B00;color:white;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;">✏️ تعديل</button>
+          <button onclick="deletePortFired(${realIdx})" style="background:#e63946;color:white;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;">🗑 حذف</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editPortFired(i) {
+  const m = state.portfired[i];
+  const reasons = ['إهمال','غياب','سرقة','مخالفة','استقالة','انتهاء العقد','أخرى'];
+  const body = `
+    <div class="form-group"><label>الاسم</label><input id="ePF_name" value="${m.name||''}" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;"/></div>
+    <div class="form-group"><label>ID</label><input id="ePF_id" value="${m.customId||''}" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;"/></div>
+    <div class="form-group"><label>المديونية</label><input type="number" id="ePF_debt" value="${m.debt||0}" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;"/></div>
+    <div class="form-group"><label>سبب الإقالة</label>
+      <select id="ePF_reason" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;">
+        ${reasons.map(r=>`<option value="${r}" ${m.reason===r?'selected':''}>${r}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>ملاحظات</label><textarea id="ePF_notes" rows="2" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit;font-size:14px;resize:vertical;">${m.notes||''}</textarea></div>
+  `;
+  openEditModal('✏️ تعديل بيانات الإقالة', body, async () => {
+    state.portfired[i].name     = document.getElementById('ePF_name').value.trim() || m.name;
+    state.portfired[i].customId = document.getElementById('ePF_id').value.trim();
+    state.portfired[i].debt     = +document.getElementById('ePF_debt').value || 0;
+    state.portfired[i].reason   = document.getElementById('ePF_reason').value;
+    state.portfired[i].notes    = document.getElementById('ePF_notes').value.trim();
+    await saveToFirebase();
+    showToast('✅ تم التعديل');
+    renderPortFired();
+  });
+}
+
+async function deletePortFired(i) {
+  if (!confirm('هتحذف الإقالة دي؟')) return;
+  state.portfired.splice(i, 1);
+  await saveToFirebase();
+  showToast('🗑 تم الحذف');
+  renderPortFired();
+}
+
+// ==================== EXCEL EXPORT ====================
+function exportExcel() {
+  const mandoubs = Object.values(state.mandoubs);
+  let csv = 'الاسم,ID,موبايل,المديونية,المدفوع,المتبقي,التاريخ\n';
+  mandoubs.forEach(m => {
+    csv += `${m.name},${m.customId||''},${m.phone||''},${m.totalDebt},${m.paid},${m.totalDebt-m.paid},${m.date}\n`;
+  });
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'طيارين_الأبطال_' + new Date().toLocaleDateString('ar-EG').replace(/\//g,'-') + '.csv';
+  a.click();
+  showToast('✅ تم تصدير الملف');
+}
+
+// ==================== ADMIN ====================
+async function loadAdminPanel() {
+  const db = window.db;
+  const ref = window.dbRef;
+  const get = window.dbGet;
+  try {
+    const snap = await get(ref(db, 'accounts'));
+    const accounts = snap.val() || {};
+    // ensure admin always exists regardless of case
+    const adminKey = Object.keys(accounts).find(k=>k.toLowerCase()==='almalki13');
+    if (!adminKey) accounts['Almalki13'] = '1310';
+    renderAccountsList(accounts);
+  } catch(e) {
+    document.getElementById('accountsList').innerHTML = '<div class="empty-state">خطأ في التحميل</div>';
+  }
+}
+
+function renderAccountsList(accounts) {
+  const el = document.getElementById('accountsList');
+  const entries = Object.entries(accounts);
+  if (!entries.length) { el.innerHTML = '<div class="empty-state">مفيش أكونتات</div>'; return; }
+  el.innerHTML = entries.map(([u, p]) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:12px;background:#f8f9fa;border-radius:10px;margin-bottom:10px;border-right:4px solid #FF6B00;">
+      <div style="flex:1;">
+        <div style="font-weight:bold;font-size:15px;">👤 ${u} ${u===ADMIN_USER?'<span style=\"background:#FF6B00;color:white;font-size:10px;padding:2px 8px;border-radius:10px;\">أدمن</span>':''}</div>
+        <div style="font-size:13px;color:#888;margin-top:3px;">🔑 ${p}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="editAccount('${u}','${p}')" style="background:#f4a261;color:white;border:none;border-radius:8px;padding:7px 12px;cursor:pointer;font-family:inherit;font-weight:bold;">تعديل</button>
+        ${u!==ADMIN_USER?`<button onclick="deleteAccount('${u}')" style="background:#e63946;color:white;border:none;border-radius:8px;padding:7px 12px;cursor:pointer;font-family:inherit;font-weight:bold;">حذف</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+async function addAccount() {
+  const u = document.getElementById('newAccUser').value.trim();
+  const p = document.getElementById('newAccPass').value.trim();
+  if (!u || !p) { showToast('ادخل اسم ومرور'); return; }
+  if (u === ADMIN_USER) { showToast('الاسم ده محجوز'); return; }
+  const db = window.db;
+  const ref = window.dbRef;
+  const set = window.dbSet;
+  const get = window.dbGet;
+  const snap = await get(ref(db, 'accounts'));
+  const accounts = snap.val() || {};
+  accounts[u] = p;
+  await set(ref(db, 'accounts'), accounts);
+  document.getElementById('newAccUser').value = '';
+  document.getElementById('newAccPass').value = '';
+  loadAdminPanel();
+  showToast('✅ تم إضافة الأكونت');
+}
+
+async function deleteAccount(u) {
+  if (!confirm('هتحذف أكونت ' + u + '؟')) return;
+  const db = window.db;
+  const ref = window.dbRef;
+  const remove = window.dbRemove;
+  await remove(ref(db, 'accounts/' + u));
+  loadAdminPanel();
+  showToast('تم الحذف');
+}
+
+function editAccount(u, oldPass) {
+  const newUser = prompt('اسم المستخدم الجديد (أو اتركه كما هو):', u);
+  if (!newUser) return;
+  const newPass = prompt('كلمة المرور الجديدة:', oldPass);
+  if (!newPass) return;
+  saveEditAccount(u, newUser.trim(), newPass.trim());
+}
+
+async function saveEditAccount(oldUser, newUser, newPass) {
+  const db = window.db;
+  const ref = window.dbRef;
+  const set = window.dbSet;
+  const remove = window.dbRemove;
+  const get = window.dbGet;
+  const snap = await get(ref(db, 'accounts'));
+  const accounts = snap.val() || {};
+  if (oldUser !== newUser) {
+    delete accounts[oldUser];
+  }
+  accounts[newUser] = newPass;
+  await set(ref(db, 'accounts'), accounts);
+  loadAdminPanel();
+  showToast('✅ تم التعديل');
+}
+
+// ==================== TOAST ====================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Close modal on overlay click
+document.getElementById('payModal').addEventListener('click', function(e) {
+  if (e.target === this) closePayModal();
+});
+</script>
+</body>
+</html>
